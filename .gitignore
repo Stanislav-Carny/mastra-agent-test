@@ -1,24 +1,32 @@
 node_modules/
+
+# Secrets
 .env
 .env.*
 !.env.example
 
 # Mastra build/runtime output
 .mastra/
-*.mastra.duckdb*
 mastra.db*
 mastra.duckdb*
+*.mastra.duckdb*
+
+# Generated mock databases: rebuilt by `npm run setup`
+*/src/mock-data/*.db
+*/src/mock-data/*.db-wal
+*/src/mock-data/*.db-shm
 
 # logs
 *.log
 npm-debug.log*
+logs/
 
 # OS/editor
 .DS_Store
 .vscode/
 .idea/
+*.swp
 
 # build output
 dist/
 build/
-

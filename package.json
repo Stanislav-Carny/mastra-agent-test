@@ -1,0 +1,27 @@
+{
+  "name": "mastra-vibe-coding-workshop",
+  "version": "1.0.0",
+  "description": "A 90-minute workshop on building agentic flows with Cursor and Mastra.",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "verify": "npm run verify --prefix before",
+    "verify:after": "npm run verify --prefix after",
+    "dev": "npm run dev --prefix before",
+    "dev:after": "npm run dev --prefix after",
+    "db:reset": "npm run db:reset --prefix before && npm run db:setup --prefix before",
+    "db:reset:after": "npm run db:reset --prefix after && npm run db:setup --prefix after",
+    "typecheck": "npm run typecheck --prefix before && npm run typecheck --prefix after",
+    "build": "npm run build --prefix before && npm run build --prefix after",
+    "docs:screenshots": "node scripts/capture-studio-screenshots.mjs",
+    "docs:pdf": "node scripts/build-walkthrough-pdf.mjs"
+  },
+  "devDependencies": {
+    "marked": "^18.0.11",
+    "playwright": "^1.62.1"
+  }
+}

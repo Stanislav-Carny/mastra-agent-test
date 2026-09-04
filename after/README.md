@@ -1,46 +1,52 @@
-# ABSL Agent Example
+# after — the finished solution
 
-Mastra example project: an expense-assistant agent (`expenseAgent`) backed by three mock MCP servers (employee directory, expense-policy knowledge base, expense-submission tool) and an `expenseWorkflow`.
+The completed expense assistant. Use it to compare against your own work in
+[`../before/`](../before/README.md), or to demo the target state.
 
-## Prerequisites
+Peeking is allowed, but you will learn more by prompting your way there first.
 
-- Node.js 20+
-- npm
+## What is here
 
-## Setup
+| Concept  | File | What it does |
+| -------- | ---- | ------------ |
+| Tool     | [`src/mastra/tools/approval-route-tool.ts`](src/mastra/tools/approval-route-tool.ts) | Deterministic approval-threshold arithmetic |
+| MCP      | [`src/mastra/mcp/expense-mcp-client.ts`](src/mastra/mcp/expense-mcp-client.ts) | Connects the three mock services |
+| MCP      | [`src/mastra/mcp/expense-service.ts`](src/mastra/mcp/expense-service.ts) | Lets workflow steps call expense tools |
+| Skill    | [`src/mastra/skills/expense-policy-citations.ts`](src/mastra/skills/expense-policy-citations.ts) | Forces policy answers to cite their source |
+| Agent    | [`src/mastra/agents/expense-agent.ts`](src/mastra/agents/expense-agent.ts) | Decides which tools to use, and when |
+| Workflow | [`src/mastra/workflows/expense-workflow.ts`](src/mastra/workflows/expense-workflow.ts) | Fixed 4-step path with a human approval pause |
+| Registry | [`src/mastra/index.ts`](src/mastra/index.ts) | Registers all of the above |
+
+## Run it
 
 ```bash
 npm install
-cp .env.example .env
+cp .env.example .env   # then fill in the keys
+npm run db:setup
+npm run verify
+npm run dev            # http://localhost:4111
 ```
 
-Fill in `.env`:
+## Try these in Studio
 
-| Variable | Required | Notes |
-| --- | --- | --- |
-| `OPENAI_API_KEY` | Yes | `expenseAgent` uses `openai/gpt-5-mini` via Mastra's model router. |
-| `TURSO_DATABASE_URL` | No | Hosted LibSQL/Turso DB. Omit to use local `file:./mastra.db`. |
-| `TURSO_AUTH_TOKEN` | No | Auth token for `TURSO_DATABASE_URL`. |
-| `MASTRA_PLATFORM_ACCESS_TOKEN` | No | Enables sending observability events to Mastra Platform. |
+**Agents → Expense Assistant**
 
-## Run
+- `What is the daily meal limit while travelling?` — searches policy and cites the document
+- `Who has to approve a $640 equipment claim for emp-002?` — directory + policy + local tool
+- `Submit a $40 client lunch for emp-002` — checks policy, then writes through MCP
 
-```bash
-npm run dev
-```
+**Workflows → expense-workflow**
 
-Starts `mastra dev` and Mastra Studio at [http://localhost:4111](http://localhost:4111).
+Run with `employeeId: emp-002` and
+`requestText: Team dinner with 4 people in Chicago, $180 total`. The run stops at
+`human-approval`; approve or reject it in Studio to finish.
 
-- **Agents** tab → chat with `expenseAgent`.
-- **Workflows** tab → run `expenseWorkflow`.
-- **MCP Server** tab → inspect the `employee`, `policy`, and `expense-tool` mock servers the agent's tools come from.
+**MCP Servers**
 
-On first run, local SQLite/DuckDB files (`mastra.db`, DuckDB observability store) are created automatically — no manual DB init needed.
+Inspect the `employee`, `policy`, and `expenseTool` services and call their tools directly.
 
-## Build
+## Notes
 
-```bash
-npm run build
-```
-
-Produces a deployable build via `mastra build` (output in `.mastra/output`, gitignored).
+- Chat runs on Anthropic; expense-policy embeddings run on OpenAI. Both keys are needed.
+- The mock databases in `src/mock-data/` are generated and gitignored. `npm run db:setup`
+  rebuilds them from the fixtures; `npm run db:reset` deletes them first.

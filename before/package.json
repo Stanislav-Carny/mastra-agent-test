@@ -1,32 +1,39 @@
 {
-  "name": "before",
+  "name": "expense-assistant-before",
   "version": "1.0.0",
-  "description": "A general-purpose Mastra agent with a local workspace, shell tools, memory, task tracking, web access, and recurring schedules.",
-  "main": "index.js",
+  "description": "Workshop starting point: seeded mock SQLite databases and three MCP services, waiting for a tool, skill, agent, and workflow.",
   "private": true,
-  "scripts": {
-    "dev": "mastra dev",
-    "build": "mastra build",
-    "start": "mastra start"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "Apache-2.0",
   "type": "module",
   "engines": {
     "node": ">=22.13.0"
   },
+  "scripts": {
+    "db:setup": "tsx src/scripts/setup-db.ts",
+    "db:reset": "tsx src/scripts/reset-db.ts",
+    "verify": "tsx src/scripts/verify.ts",
+    "typecheck": "tsc --noEmit",
+    "dev": "mastra dev",
+    "build": "mastra build",
+    "start": "mastra start"
+  },
   "dependencies": {
+    "@libsql/client": "0.17.4",
     "@mastra/core": "1.63.2",
     "@mastra/duckdb": "1.6.3",
     "@mastra/libsql": "1.22.2",
-    "@mastra/memory": "1.28.1",
+    "@mastra/loggers": "1.3.0",
+    "@mastra/mcp": "1.17.2",
     "@mastra/observability": "1.17.4",
-    "zod": "^4.4.3"
+    "@mastra/rag": "2.6.0",
+    "ai": "7.0.77",
+    "dotenv": "17.4.2",
+    "drizzle-orm": "0.45.2",
+    "zod": "4.4.3"
   },
   "devDependencies": {
-    "@types/node": "latest",
+    "@types/node": "^22.13.0",
     "mastra": "1.27.2",
-    "typescript": "^6.0.3"
+    "tsx": "4.23.13",
+    "typescript": "^5.7.0"
   }
 }

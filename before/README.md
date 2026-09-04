@@ -1,58 +1,48 @@
-# before
+# before — your workspace
 
-Welcome to your new [Mastra](https://mastra.ai) project! We're excited to see what you build.
+This is where you build during the workshop. Follow the guides in
+[`../docs/`](../docs/README.md); this file is only a quick reference.
 
-This starter provides you with a general-purpose Mastra agent that can research current information, manage multi-step tasks, work with local files, run approved shell commands, and create recurring schedules.
+## What you already have
 
-## Features
+Three mock services, each a separate process speaking MCP over stdio, each backed by its
+own local SQLite database:
 
-- A project-level `workspace/` for files and command execution
-- Approval gates for file changes, deletions, and shell commands
-- Conversation memory, generated thread titles, and task tracking
-- Built-in web search and direct web page fetching
-- Recurring schedules that persist across restarts
-- Local libSQL storage and DuckDB observability, with optional Turso storage
-- A bundled Mastra skill that helps coding agents use current Mastra APIs
+| Service                | Tools                                                             | Data |
+| ---------------------- | ----------------------------------------------------------------- | ---- |
+| Employee Directory     | `getEmployee`, `listEmployees`                                     | 100 employees across 8 departments |
+| Policy Knowledge Base  | `searchExpensePolicy`                                              | 11 policy documents, vector-indexed |
+| Expense Submission     | `submitExpense`, `getExpenseStatus`, `listExpenses`, `updateExpenseStatus` | 150 historical claims |
 
-## Get started
+Also provided: the seed fixtures in `src/mock-data/`, the database helpers in `src/db/`,
+and the setup/verify scripts in `src/scripts/`. Treat all of that as an existing system
+you are integrating with, not code to change.
 
-Set your `OPENAI_API_KEY` in `.env` or in your environment, then run:
+## What you build
 
-```shell
-npm run dev
+| Guide | You create | Concept |
+| ----- | ---------- | ------- |
+| [02](../docs/02-build-the-tool.md) | `src/mastra/tools/approval-route-tool.ts` | Tool |
+| [03](../docs/03-connect-mcp.md) | `src/mastra/mcp/` | MCP client |
+| [04](../docs/04-agent-and-skill.md) | `src/mastra/skills/`, `src/mastra/agents/expense-agent.ts` | Skill, Agent |
+| [05](../docs/05-approval-workflow.md) | `src/mastra/workflows/expense-workflow.ts` | Workflow |
+
+Everything must be registered in `src/mastra/index.ts` to appear in Studio.
+
+## Commands
+
+```bash
+npm run verify     # is my setup working?
+npm run dev        # start Mastra Studio at http://localhost:4111
+npm run db:reset   # wipe the mock databases
+npm run db:setup   # rebuild them from the seed fixtures
+npm run typecheck  # check types without running anything
 ```
 
-Open [http://localhost:4111](http://localhost:4111) in your browser to access [Mastra Studio](https://mastra.ai/docs/studio/overview).
+`setupCheckAgent` is a throwaway agent that only proves your API key works. Delete it
+once your expense assistant runs.
 
-Select **Agent** in Mastra Studio and try one of these prompts:
+## Stuck?
 
-- `Get the weather forecast for Austin this weekend.`
-- `Create a landing page for a Japanese sakura festival.`
-- `Check the SPCX stock price now, then check it every minute.`
-
-The agent asks for approval before it changes files or runs commands. When it creates a schedule, it returns an ID that you can use to pause the schedule.
-
-## Workspace safety
-
-The local filesystem tools stay inside the project-level `workspace/` directory. Shell commands start in that directory, but `LocalSandbox` does not provide operating-system isolation by default. Review command approvals carefully, and do not expose this template through an unauthenticated public server.
-
-## Storage
-
-The default `file:./mastra.db` database stores agent memory, tasks, and schedules locally. To use Turso, set `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` in `.env`.
-
-Recurring schedules continue to use model tokens until you pause them. Ask the agent to pause a schedule with the ID returned by `start_schedule`.
-
-## Making it yours
-
-- Edit `src/mastra/agents/agent.ts` to change the model, instructions, memory, workspace, or approval policy.
-- Edit `src/mastra/tools/` to customize scheduling.
-- Edit `src/mastra/index.ts` to change storage and observability.
-- Add files or reusable skills under `workspace/` for the agent to use.
-
-## Learn more
-
-To learn more about Mastra, visit our [documentation](https://mastra.ai/docs/). If you're new to AI agents, check out our [course](https://mastra.ai/learn) and [YouTube videos](https://youtube.com/@mastra-ai). You can also join our [Discord](https://discord.gg/BTYqqHKUrf) community to get help and share your projects.
-
-## Deploy to the Mastra platform
-
-The [Mastra platform](https://projects.mastra.ai) provides two products for deploying and managing AI applications built with the Mastra framework. Learn more in the [Mastra platform documentation](https://mastra.ai/docs/mastra-platform/overview).
+Read [`../docs/troubleshooting.md`](../docs/troubleshooting.md), or compare against the
+finished solution in [`../after/`](../after/README.md).

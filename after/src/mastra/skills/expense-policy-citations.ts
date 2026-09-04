@@ -1,15 +1,21 @@
 import { createSkill } from '@mastra/core/skills';
 
+/**
+ * A runtime agent skill: instructions the agent loads when the task matches the
+ * description. Not to be confused with the `mastra` Cursor skill in `.agents/skills/`,
+ * which guides the coding assistant while you write this project.
+ */
 export const expensePolicyCitationsSkill = createSkill({
   name: 'expense-policy-citations',
-  description: 'Use whenever answering a question about expense policy (limits, approval rules, receipt requirements, etc.).',
-  instructions: `When answering a question that draws on expense policy:
+  description:
+    'Use whenever answering a question about expense policy: limits, approval rules, receipt requirements, or deadlines.',
+  instructions: `When your answer draws on expense policy:
 
-1. Look up the relevant passage with the search_expense_policy tool.
-2. Cite the source for every claim: add a bookmark/citation naming the policy document it
-   came from, using the "title" field returned by the tool. Format: [Title] immediately after
-   the claim, e.g. "Hotel bookings are capped at $250/night in major cities [Business Travel Policy]."
-3. If a statement is supported by more than one passage, cite all of them: [Title A][Title B].
+1. Look up the relevant passage with the policy search tool before answering.
+2. Cite the source for every claim. Put the policy document title in square brackets
+   immediately after the claim, using the "title" field the search tool returned.
+   Example: "Hotel bookings are capped at $250/night in major cities [Business Travel Policy]."
+3. If a statement rests on more than one passage, cite all of them: [Title A][Title B].
 4. Never state a policy rule, limit, or approval threshold without a citation.
-5. If the search tool returns no relevant passage, say so explicitly instead of guessing.`,
+5. If the search returns nothing relevant, say so plainly instead of guessing.`,
 });
