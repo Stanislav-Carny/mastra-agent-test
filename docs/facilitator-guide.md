@@ -48,6 +48,26 @@ npm run setup && npm run verify && npm run verify:after
 npm run typecheck
 ```
 
+**Proving the demo works, not just the setup.** `verify` checks credentials, databases and
+MCP; it does not exercise the agent. To check the thing you are actually going to demo, run
+the end-to-end script against a running `after/`:
+
+```bash
+npm run dev:after      # in one terminal
+npm run e2e            # in another, takes about a minute
+```
+
+It attaches the sample receipt in chat, waits for the agent to read it and start the
+workflow, then approves the claim and confirms the run completes. Every step is
+screenshotted into `reports/<timestamp>/`, which is gitignored, with a `report.md`
+summarising what passed. A failed step leaves you a picture of the screen at the moment it
+broke, which is usually enough to see what changed.
+
+Two caveats. The run submits a claim for `emp-002`, so follow it with `npm run db:reset:after`
+to restore the seeded fixture. And the agent's choices come from a model, so an occasional
+step can fail on one run and pass on the next — read a failure as "look at this", not
+"the workshop is broken".
+
 ## Run of show
 
 | Time | Minutes | What |

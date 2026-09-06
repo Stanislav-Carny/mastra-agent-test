@@ -30,3 +30,6 @@ logs/
 # build output
 dist/
 build/
+
+# End-to-end run output: screenshots and reports from `npm run e2e`
+reports/

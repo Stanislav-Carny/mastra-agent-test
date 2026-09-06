@@ -12,6 +12,7 @@ projects plus the curriculum:
 | `scripts/capture-studio-screenshots.mjs` | Regenerates `docs/images/` with Playwright |
 | `scripts/build-walkthrough-pdf.mjs` | Renders the walkthrough into the printable handout |
 | `scripts/build-sample-receipt.mjs` | Regenerates the receipt image used by the stage 06 extension |
+| `scripts/e2e-receipt-flow.mjs` | Drives the receipt-to-approval flow in Studio, into gitignored `reports/` |
 
 ## CRITICAL: Load the `mastra` skill first
 
