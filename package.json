@@ -18,7 +18,8 @@
     "typecheck": "npm run typecheck --prefix before && npm run typecheck --prefix after",
     "build": "npm run build --prefix before && npm run build --prefix after",
     "docs:screenshots": "node scripts/capture-studio-screenshots.mjs",
-    "docs:pdf": "node scripts/build-walkthrough-pdf.mjs"
+    "docs:pdf": "node scripts/build-walkthrough-pdf.mjs",
+    "docs:receipt": "node scripts/build-sample-receipt.mjs"
   },
   "devDependencies": {
     "marked": "^18.0.11",

@@ -84,6 +84,21 @@ tools, because nothing in its instructions says otherwise. Handing an agent a fi
 process does not make it follow one. If you want the process every time, say so in the
 instructions — or don't expose the shortcut tools at all.
 
+**Now submit a receipt instead of typing (5 min).** With the workflow wired up, use
+**Add attachment → Add a local file** in the chat composer, attach
+[`assets/sample-receipt.png`](assets/sample-receipt.png), and say *"here's my receipt,
+submit this expense for emp-002 using the expense workflow."*
+
+No code changes. The chat model already handles images, so the agent reads the receipt,
+pulls out the vendor, date, `$180.00 USD` and the guest count, notes that the receipt is
+itemised, and feeds all of it into the workflow's free-form `requestText`. The workflow
+never knows an image was involved. A good run also flags that $180 across 4 guests is
+$45/person against the $30/person internal-meal cap.
+
+This is the demo worth showing someone who is sceptical about all of this: a photo of a
+receipt goes in, a routed and policy-checked claim comes out, and it still stops for a
+human before anything is approved.
+
 **Add a tool to an MCP service (15 min).** Add something like `getTeamSpend(department)`
 to the employee or expense service. The seed data has 100 employees and 150 claims, so an
 aggregate like this returns something worth looking at. Notice you do **not** have to

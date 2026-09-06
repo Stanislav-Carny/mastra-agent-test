@@ -11,6 +11,7 @@ projects plus the curriculum:
 | `scripts/setup.mjs` | Clone-to-ready setup for both projects |
 | `scripts/capture-studio-screenshots.mjs` | Regenerates `docs/images/` with Playwright |
 | `scripts/build-walkthrough-pdf.mjs` | Renders the walkthrough into the printable handout |
+| `scripts/build-sample-receipt.mjs` | Regenerates the receipt image used by the stage 06 extension |
 
 ## CRITICAL: Load the `mastra` skill first
 
