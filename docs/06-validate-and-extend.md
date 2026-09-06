@@ -70,6 +70,20 @@ router: one string, no other code changes.
 re-embed. Ask the agent something only the new document answers, and check that it cites
 the new title. You have just updated an agent's knowledge without touching the agent.
 
+**Let the agent start the workflow (10 min).** So far the agent and the workflow live in
+separate Studio tabs. Ask Cursor to give the assistant the expense workflow as well, so an
+employee can kick off the whole approval process from chat.
+
+The interesting part is what happens next. Studio draws the workflow inline in the
+conversation, steps turning green as they run, and when it reaches `human-approval` the
+chat itself stops and waits — the pause travels all the way out to the caller.
+
+Then try asking in plain language: *"submit a team dinner for 4 people in Chicago, $180,
+for emp-002."* The agent will most likely ignore the workflow and do it with its own
+tools, because nothing in its instructions says otherwise. Handing an agent a fixed
+process does not make it follow one. If you want the process every time, say so in the
+instructions — or don't expose the shortcut tools at all.
+
 **Add a tool to an MCP service (15 min).** Add something like `getTeamSpend(department)`
 to the employee or expense service. The seed data has 100 employees and 150 claims, so an
 aggregate like this returns something worth looking at. Notice you do **not** have to
