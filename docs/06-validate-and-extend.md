@@ -74,6 +74,18 @@ the new title. You have just updated an agent's knowledge without touching the a
 separate Studio tabs. Ask Cursor to give the assistant the expense workflow as well, so an
 employee can kick off the whole approval process from chat.
 
+**Expect `npm run typecheck` to fail the first time.** Your workflow imports the agent for
+its `draft-claim` step, and now the agent imports the workflow, so TypeScript gives up on
+inferring either of them: *"implicitly has type 'any' because it does not have a type
+annotation and is referenced directly or indirectly in its own initializer."* It runs fine
+— the cycle only defeats inference — but the fix is worth making. Have the step ask the
+registry for the agent instead of importing it, which is how the reference does it:
+
+```ts
+execute: async ({ inputData, mastra }) => {
+  const expenseAgent = mastra.getAgent('expenseAgent');
+```
+
 The interesting part is what happens next. Studio draws the workflow inline in the
 conversation, steps turning green as they run, and when it reaches `human-approval` the
 chat itself stops and waits — the pause travels all the way out to the caller.
@@ -83,6 +95,14 @@ for emp-002."* The agent will most likely ignore the workflow and do it with its
 tools, because nothing in its instructions says otherwise. Handing an agent a fixed
 process does not make it follow one. If you want the process every time, say so in the
 instructions — or don't expose the shortcut tools at all.
+
+There is a second-order version of the same problem. Once you have told it to use the
+workflow, a claim that breaches a policy limit will often stop it anyway: it flags the
+breach and asks you what to do. That sounds responsible, but it puts the agent in charge
+of a decision the `human-approval` step exists to make. The reference agent is told to
+submit it regardless and record the breach in the request text, because the approver
+decides. Compare your instructions with
+[`after/src/mastra/agents/expense-agent.ts`](../after/src/mastra/agents/expense-agent.ts).
 
 **Now submit a receipt instead of typing (5 min).** With the workflow wired up, use
 **Add attachment → Add a local file** in the chat composer, attach

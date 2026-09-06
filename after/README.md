@@ -13,7 +13,7 @@ Peeking is allowed, but you will learn more by prompting your way there first.
 | MCP      | [`src/mastra/mcp/expense-mcp-client.ts`](src/mastra/mcp/expense-mcp-client.ts) | Connects the three mock services |
 | MCP      | [`src/mastra/mcp/expense-service.ts`](src/mastra/mcp/expense-service.ts) | Lets workflow steps call expense tools |
 | Skill    | [`src/mastra/skills/expense-policy-citations.ts`](src/mastra/skills/expense-policy-citations.ts) | Forces policy answers to cite their source |
-| Agent    | [`src/mastra/agents/expense-agent.ts`](src/mastra/agents/expense-agent.ts) | Decides which tools to use, and when |
+| Agent    | [`src/mastra/agents/expense-agent.ts`](src/mastra/agents/expense-agent.ts) | Decides which tools to use, and when; starts the workflow to submit |
 | Workflow | [`src/mastra/workflows/expense-workflow.ts`](src/mastra/workflows/expense-workflow.ts) | Fixed 4-step path with a human approval pause |
 | Registry | [`src/mastra/index.ts`](src/mastra/index.ts) | Registers all of the above |
 
@@ -33,7 +33,12 @@ npm run dev            # http://localhost:4111
 
 - `What is the daily meal limit while travelling?` — searches policy and cites the document
 - `Who has to approve a $640 equipment claim for emp-002?` — directory + policy + local tool
-- `Submit a $40 client lunch for emp-002` — checks policy, then writes through MCP
+- `Submit a $40 client lunch for emp-002` — checks policy, then hands off to the workflow,
+  which runs inline in the chat and pauses at `human-approval`
+- Attach [`../docs/assets/sample-receipt.png`](../docs/assets/sample-receipt.png) with
+  **Add attachment → Add a local file** and say `here's my receipt, submit it for emp-002`.
+  The agent reads the receipt, flags that $180 across 4 guests breaches the $30/person cap,
+  and submits it anyway — the approver makes that call, not the agent.
 
 **Workflows → expense-workflow**
 

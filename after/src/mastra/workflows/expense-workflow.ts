@@ -1,6 +1,5 @@
 import { createStep, createWorkflow } from '@mastra/core/workflows';
 import { z } from 'zod';
-import { expenseAgent } from '../agents/expense-agent';
 import { callExpenseTool } from '../mcp/expense-service';
 import { calculateApprovalRoute } from '../tools/approval-route-tool';
 
@@ -48,8 +47,12 @@ const draftClaim = createStep({
   description: 'Ask the expense agent to turn a free-form request into a structured claim',
   inputSchema: workflowInputSchema,
   outputSchema: draftSchema,
-  execute: async ({ inputData }) => {
+  execute: async ({ inputData, mastra }) => {
     const { employeeId, requestText } = inputData;
+
+    // Resolved from the registry rather than imported: the agent also lists this workflow,
+    // and importing it here would make the two files depend on each other.
+    const expenseAgent = mastra.getAgent('expenseAgent');
 
     const response = await expenseAgent.generate(
       `Employee ${employeeId} wants to submit this expense: "${requestText}". ` +

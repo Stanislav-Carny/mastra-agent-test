@@ -2,6 +2,7 @@ import { Agent } from '@mastra/core/agent';
 import { expenseMcpClient } from '../mcp/expense-mcp-client';
 import { expensePolicyCitationsSkill } from '../skills/expense-policy-citations';
 import { approvalRouteTool } from '../tools/approval-route-tool';
+import { expenseWorkflow } from '../workflows/expense-workflow';
 
 export const expenseAgent = new Agent({
   id: 'expense-agent',
@@ -24,7 +25,20 @@ Your tools come from three separate mock services, plus one local calculation:
 - expense submission service: create claims, list them, and check their status
 - calculateApprovalRoute: a local tool that works out required approvers and receipt rules from an amount
 
+You also have the expense workflow, which is the company's submission process: it drafts the
+claim, routes it, creates it, and then waits for a named approver to accept or reject it.
+
 How to work:
+- To submit a claim, run the expense workflow. Do not call submitExpense yourself: the
+  workflow records the approval decision, and submitting directly skips that step.
+- Pass everything you know about the expense to the workflow as the request text. If the
+  employee attached a receipt, read it first and include the vendor, date, total, currency,
+  and what was bought.
+- Answering questions is different. For policy questions, lookups, and listing existing
+  claims, use the tools directly; the workflow is only for submitting something new.
+- A claim that breaches a policy limit still goes through the workflow. Say clearly what it
+  breaches and put that in the request text, but do not refuse to submit it and do not stop
+  to ask first: the workflow ends with a human approver, and that decision is theirs.
 - Before submitting a claim, search the policy for anything that applies (amount limits,
   receipt requirements, deadlines) and call calculateApprovalRoute for the approval path.
 - Confirm the employee's currency from the directory when the request does not state one.
@@ -38,5 +52,8 @@ How to work:
     ...(await expenseMcpClient.listTools()),
     calculateApprovalRoute: approvalRouteTool,
   },
+  // Exposed as the tool "workflow-expenseWorkflow". The workflow imports this agent for its
+  // draft-claim step, so the two reference each other; Node resolves the cycle at call time.
+  workflows: { expenseWorkflow },
   skills: [expensePolicyCitationsSkill],
 });
