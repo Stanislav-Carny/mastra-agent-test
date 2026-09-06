@@ -136,6 +136,23 @@ N+1's `inputSchema` does not declare. Paste the error to Cursor; these are mecha
 **The claim exists twice.** The workflow submitted it *and* the agent submitted it during
 drafting. Step 1's prompt must ask the agent to *fill in the claim*, not to submit it.
 
+## Two registries, not one
+
+Worth pausing on, because it catches people out. Your workflow is registered in
+`src/mastra/index.ts`, so Studio lists it under **Workflows** and you can run it there.
+That is not the same as your agent being able to use it. Ask the assistant in chat to run
+the workflow and it cannot: an agent only sees what is in its own `tools`, `skills`, and
+`workflows` config.
+
+So there are two separate questions, and it is easy to assume the first answers the second:
+
+| Question | Answered by |
+| -------- | ----------- |
+| Can I see and run it in Studio? | Registered in `src/mastra/index.ts` |
+| Can the agent use it? | Listed in that agent's own config |
+
+Stage 06 has an extension that closes the gap, and it is more interesting than it sounds.
+
 ## Checkpoint
 
 You have now built all five concepts and seen the division of labour: the agent decides,
