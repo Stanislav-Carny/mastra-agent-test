@@ -88,6 +88,34 @@ const context = await browser.newContext({
 const page = await context.newPage();
 
 let draftedClaim = null;
+let reviewerVerdict = null;
+let suspendedRun = null;
+
+/**
+ * The workflow graph renders in chat as soon as the run starts, so the presence of a
+ * `human-approval` node proves nothing about whether the run has actually got there.
+ * Ask storage instead, and wait for a run that really is suspended at that step.
+ */
+async function waitForSuspendedRun(timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    const res = await fetch(`${baseUrl}/api/workflows/expenseWorkflow/runs?limit=5`, {
+      signal: AbortSignal.timeout(15_000),
+    });
+    const body = await res.json();
+    const runs = (Array.isArray(body) ? body : body.runs) ?? [];
+
+    const suspended = runs
+      .filter(r => r.snapshot?.status === 'suspended' && r.snapshot?.suspendedPaths?.['human-approval'])
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+
+    if (suspended) return suspended;
+    await new Promise(resolve => setTimeout(resolve, 3000));
+  }
+
+  throw new Error(`no run suspended at human-approval within ${timeoutMs / 1000}s`);
+}
 
 await step(page, 'studio-reachable', async () => {
   await page.goto(`${baseUrl}/agents`, { waitUntil: 'domcontentloaded' });
@@ -133,8 +161,29 @@ await step(page, 'agent-reads-receipt-and-starts-workflow', async () => {
 
 await step(page, 'workflow-suspended-in-chat', async () => {
   await page.getByText('human-approval').first().waitFor({ timeout: 120_000 });
+
+  // Two model steps run before the pause, so this is the slowest part of the flow.
+  suspendedRun = await waitForSuspendedRun(180_000);
   await page.waitForTimeout(4000);
-  return 'run reached the human-approval step inside the conversation';
+
+  const steps = Object.keys(suspendedRun.snapshot.context).filter(k => k !== 'input');
+  return `run suspended at human-approval after ${steps.length} steps`;
+});
+
+// The point of the reviewer is that its recommendation reaches the human approver, which
+// means it has to be in the suspended run's snapshot rather than only in the chat.
+await step(page, 'reviewer-recommendation-reaches-approver', async () => {
+  const review = suspendedRun?.snapshot?.context?.['review-claim']?.output?.review;
+  if (!review) throw new Error('the suspended run carries no reviewer output');
+
+  const allowed = ['approve', 'reject', 'needs_more_information'];
+  if (!allowed.includes(review.recommendation)) {
+    throw new Error(`unexpected recommendation: ${review.recommendation}`);
+  }
+  if (!review.policyFindings?.trim()) throw new Error('reviewer gave no policy findings');
+
+  reviewerVerdict = review.recommendation;
+  return `reviewer recommended "${review.recommendation}" with findings attached`;
 });
 
 // Whether the model actually read the image is easier to assert over the API than by
@@ -179,10 +228,12 @@ await step(page, 'run-resumable-from-workflows-tab', async () => {
   const recentRuns = page.locator('a, [role="button"], li').filter({ hasText: /^[0-9a-f]{8}-/ });
   await recentRuns.first().waitFor({ timeout: 30_000 });
   await recentRuns.first().click();
-  await page.waitForTimeout(3000);
 
-  await page.getByText('Step suspended').first().waitFor({ timeout: 30_000 });
-  return 'the run started from chat is waiting in the Workflows tab';
+  // Wait for the control the next step needs, not for label text: the panel renders in
+  // stages and "Step suspended" can appear before the form is usable.
+  await page.getByRole('button', { name: 'Resume' }).waitFor({ timeout: 60_000 });
+  await page.waitForTimeout(1500);
+  return 'the run started from chat is waiting in the Workflows tab, resumable';
 });
 
 await step(page, 'approved-and-completed', async () => {
@@ -209,8 +260,8 @@ const report = `# End-to-end check
 - **Duration:** ${elapsed}s
 
 The flow: attach \`docs/assets/sample-receipt.png\` in the Expense Assistant chat, let the
-agent read it and start the expense workflow, then approve the claim and confirm the run
-completes.
+agent read it and start the expense workflow, check that the independent reviewer's
+recommendation reaches the approver, then approve the claim and confirm the run completes.
 
 | # | Step | Result | Took | Notes |
 | - | ---- | ------ | ---- | ----- |
@@ -219,6 +270,7 @@ ${steps
   .join('\n')}
 
 ${draftedClaim ? `What the model read off the receipt image: ${draftedClaim}\n` : ''}
+${reviewerVerdict ? `The reviewer's recommendation to the approver: **${reviewerVerdict}**\n` : ''}
 ## Screenshots
 
 ${steps.map(s => `### ${s.name}\n\n![${s.name}](${s.screenshot})\n`).join('\n')}

@@ -58,9 +58,9 @@ npm run e2e            # in another, takes about a minute
 ```
 
 It attaches the sample receipt in chat, waits for the agent to read it and start the
-workflow, then approves the claim and confirms the run completes. Every step is
-screenshotted into `reports/<timestamp>/`, which is gitignored, with a `report.md`
-summarising what passed. A failed step leaves you a picture of the screen at the moment it
+workflow, checks that the reviewer's recommendation reached the approver, then approves the
+claim and confirms the run completes. Every step is screenshotted into
+`reports/<timestamp>/`, which is gitignored, with a `report.md` summarising what passed. A failed step leaves you a picture of the screen at the moment it
 broke, which is usually enough to see what changed.
 
 Two caveats. The run submits a claim for `emp-002`, so follow it with `npm run db:reset:after`
@@ -99,6 +99,15 @@ Then run the workflow, let it suspend, and say: "Same capabilities, fixed order,
 stops for a human. That is a **workflow**."
 
 Two minutes of demo lands better than ten minutes of slides.
+
+**On the second agent, when someone spots it.** `after/` has a Claim Reviewer, and running
+the $180 team dinner shows the two agents disagreeing: the assistant submits the over-cap
+claim, the reviewer recommends rejecting it. It is a good moment, but do not let it become
+"and you should add more agents." The [stage 06
+extension](06-validate-and-extend.md#extensions) rejects five candidates before accepting
+this one, and the reason it survives is that it is denied the write tools. If time is
+short, the one-liner is: "a second agent has to be able to do something the first cannot —
+here, that is being unable to approve its own claim."
 
 ### 0:10 Stage 01 (10 min)
 

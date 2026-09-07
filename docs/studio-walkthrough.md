@@ -21,6 +21,10 @@ finished `after/` project, because that is the only place all the pieces exist a
 so its sidebar is fuller than yours will be at that moment. Judge the panel you are
 working in, not the item count next to it.
 
+That applies to the workflow too. `after/` includes the stage 06 reviewer, so its graph
+has five steps where the one you build in stage 05 has four, and its Agents list has two
+where yours has one. Both extras are marked where they appear.
+
 ---
 
 ## Getting it running
@@ -190,11 +194,17 @@ with `emp-002` and `Team dinner with 4 people in Chicago, $180 total`.
 
 ![A suspended workflow run waiting at the human-approval step](images/05-workflow-suspended.png)
 
-**Look for:** the run marked **Suspended**, the first three steps green, and
+**Look for:** the run marked **Suspended**, the steps before it green, and
 `human-approval` highlighted with a **Step suspended / Needs input** panel on the right.
-The timeline at the bottom shows where the time went: `draft-claim` takes seconds because
-it calls the agent, while `route-for-approval` and `submit-claim` are near-instant because
-they are ordinary code.
+The timeline at the bottom is worth reading closely, because it prices the design. The two
+steps that call an agent take seconds each, and `route-for-approval` and `submit-claim` are
+near-instant because they are ordinary code. That gap is the argument for using the model
+only where judgment is actually needed.
+
+The graph here has five steps because it comes from `after/`. `review-claim` is the
+[stage 06 extension](06-validate-and-extend.md#extensions), and the roughly 20 seconds it
+adds is the honest cost of a second opinion. The four-step version you built in stage 05
+behaves identically without it.
 
 Check the drafted claim before you resume. The agent will usually have flagged the
 $30/person cap on internal team meals, and some runs draft the amount as the $150 that is
@@ -206,9 +216,9 @@ storage, not in your browser or in a chat session, which is the reason workflows
 
 **Then resume it.** Tick the approve box, add a note, and press Resume:
 
-![A completed workflow run with all four steps successful](images/05-workflow-resumed.png)
+![A completed workflow run with every step successful](images/05-workflow-resumed.png)
 
-**Look for:** status **Success** and all four steps green through to `End`. Confirm the
+**Look for:** status **Success** and every step green through to `End`. Confirm the
 decision was actually recorded by calling **MCP Servers → expenseTool → getExpenseStatus**
 with the `expenseId` from the result: the status should now be `approved`.
 
@@ -250,7 +260,7 @@ receipt for a team dinner. Please submit it for emp-002."*
   approver decides. Yours will probably stop and ask until you tell it otherwise.
 
 Then it calls the workflow, and Studio draws the run inline in the conversation. Scroll
-down and you can watch the same four steps you ran from a form in stage 05:
+down and you can watch the same steps you ran from a form in stage 05:
 
 ![The expense workflow drawn inside the chat, paused at the human-approval step](images/06-chat-workflow-suspended.png)
 

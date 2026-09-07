@@ -4,9 +4,11 @@ import { callExpenseTool } from '../mcp/expense-service';
 import { calculateApprovalRoute } from '../tools/approval-route-tool';
 
 /**
- * Where the agent decides what to do next, this workflow fixes the order: draft, price
- * the approval route, submit, then wait for a human. Only the first step uses the model;
- * the rest are deterministic, and every write goes through the expense MCP service.
+ * Where the agent decides what to do next, this workflow fixes the order: draft, price the
+ * approval route, submit, review, then wait for a human. Two of the five steps use a model,
+ * and they use different agents on purpose — the assistant drafts the claim, and an
+ * independent read-only reviewer advises the approver. The rest is deterministic, and every
+ * write goes through the expense MCP service.
  */
 
 const draftSchema = z.object({
@@ -31,7 +33,22 @@ const submittedSchema = routedSchema.extend({
   expenseId: z.string(),
 });
 
-const decidedSchema = submittedSchema.extend({
+const reviewSchema = z.object({
+  recommendation: z.enum(['approve', 'reject', 'needs_more_information']),
+  rationale: z.string().describe("One or two sentences the approver reads first"),
+  policyFindings: z
+    .string()
+    .describe('What the reviewer found in policy, checked independently of the draft'),
+  historyFindings: z
+    .string()
+    .describe("Anything in the employee's past claims worth the approver's attention"),
+});
+
+const reviewedSchema = submittedSchema.extend({
+  review: reviewSchema,
+});
+
+const decidedSchema = reviewedSchema.extend({
   status: z.enum(['approved', 'rejected']),
   approverNote: z.string().optional(),
 });
@@ -105,14 +122,45 @@ const submitClaim = createStep({
 });
 
 /**
- * Step 4: pause for a human. `suspend()` saves a snapshot and returns; the run continues
- * when someone resumes it with a decision, which Studio exposes as a form.
+ * Step 4: a second opinion, from an agent that cannot act on it. This is the one place the
+ * project needs two agents: the reviewer works for finance rather than the claimant, holds
+ * read-only tools, and did not draft what it is checking.
+ */
+const reviewClaim = createStep({
+  id: 'review-claim',
+  description: 'Ask an independent read-only reviewer to recommend a decision to the approver',
+  inputSchema: submittedSchema,
+  outputSchema: reviewedSchema,
+  execute: async ({ inputData, mastra }) => {
+    const reviewer = mastra.getAgent('claimReviewAgent');
+
+    const response = await reviewer.generate(
+      `Review this submitted claim and recommend a decision.\n\n` +
+        `Claim ${inputData.expenseId} for employee ${inputData.employeeId}: ` +
+        `${inputData.amount} ${inputData.currency}, category ${inputData.category}. ` +
+        `Description: "${inputData.description}".\n` +
+        `Required approvers: ${inputData.approvers.join(', ')}. ` +
+        `Receipt required: ${inputData.receiptRequired}.\n\n` +
+        // Passed as a claim to test, not as a finding to repeat.
+        `The submitter noted: "${inputData.policyNotes}". Verify that against policy ` +
+        `yourself rather than repeating it, and check the employee's recent claims.`,
+      { structuredOutput: { schema: reviewSchema } },
+    );
+
+    return { ...inputData, review: response.object };
+  },
+});
+
+/**
+ * Step 5: pause for a human, who now sees the reviewer's recommendation in the suspend
+ * payload rather than raw fields. `suspend()` saves a snapshot and returns; the run
+ * continues when someone resumes it with a decision, which Studio exposes as a form.
  */
 const humanApproval = createStep({
   id: 'human-approval',
   description: 'Wait for an approver to accept or reject the claim, then record the decision',
-  inputSchema: submittedSchema,
-  suspendSchema: submittedSchema,
+  inputSchema: reviewedSchema,
+  suspendSchema: reviewedSchema,
   resumeSchema: z.object({
     approved: z.boolean().describe('True to approve the claim, false to reject it'),
     approverNote: z.string().optional().describe('Optional note explaining the decision'),
@@ -133,12 +181,13 @@ const humanApproval = createStep({
 export const expenseWorkflow = createWorkflow({
   id: 'expense-workflow',
   description:
-    'Draft an expense claim from a free-form request, route it for approval, submit it, and wait for a human decision.',
+    'Draft an expense claim from a free-form request, route it for approval, submit it, have it reviewed independently, and wait for a human decision.',
   inputSchema: workflowInputSchema,
   outputSchema: decidedSchema,
 })
   .then(draftClaim)
   .then(routeForApproval)
   .then(submitClaim)
+  .then(reviewClaim)
   .then(humanApproval)
   .commit();

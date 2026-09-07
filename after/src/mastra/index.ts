@@ -9,6 +9,7 @@ import {
   Observability,
   SensitiveDataFilter,
 } from '@mastra/observability';
+import { claimReviewAgent } from './agents/claim-review-agent';
 import { expenseAgent } from './agents/expense-agent';
 import { expenseServerProxies } from './mcp/expense-service';
 import { approvalRouteTool } from './tools/approval-route-tool';
@@ -20,7 +21,7 @@ import { expenseWorkflow } from './workflows/expense-workflow';
  * agent, tool, or workflow seems to have vanished.
  */
 export const mastra = new Mastra({
-  agents: { expenseAgent },
+  agents: { expenseAgent, claimReviewAgent },
   tools: { approvalRouteTool },
   workflows: { expenseWorkflow },
   // Surfaces the three mock services in Studio's MCP Servers tab.

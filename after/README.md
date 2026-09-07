@@ -14,7 +14,8 @@ Peeking is allowed, but you will learn more by prompting your way there first.
 | MCP      | [`src/mastra/mcp/expense-service.ts`](src/mastra/mcp/expense-service.ts) | Lets workflow steps call expense tools |
 | Skill    | [`src/mastra/skills/expense-policy-citations.ts`](src/mastra/skills/expense-policy-citations.ts) | Forces policy answers to cite their source |
 | Agent    | [`src/mastra/agents/expense-agent.ts`](src/mastra/agents/expense-agent.ts) | Decides which tools to use, and when; starts the workflow to submit |
-| Workflow | [`src/mastra/workflows/expense-workflow.ts`](src/mastra/workflows/expense-workflow.ts) | Fixed 4-step path with a human approval pause |
+| Agent    | [`src/mastra/agents/claim-review-agent.ts`](src/mastra/agents/claim-review-agent.ts) | Reviews a submitted claim for finance; read-only, so it advises but cannot act |
+| Workflow | [`src/mastra/workflows/expense-workflow.ts`](src/mastra/workflows/expense-workflow.ts) | Fixed 5-step path: draft, route, submit, review, then pause for a human |
 | Registry | [`src/mastra/index.ts`](src/mastra/index.ts) | Registers all of the above |
 
 ## Run it
@@ -40,11 +41,23 @@ npm run dev            # http://localhost:4111
   The agent reads the receipt, flags that $180 across 4 guests breaches the $30/person cap,
   and submits it anyway — the approver makes that call, not the agent.
 
+**Agents → Claim Reviewer**
+
+The second agent, and the only one this project could justify — see the
+[reasoning](../docs/06-validate-and-extend.md#extensions) for the five candidates that were
+rejected. Count its tools: five, not seven. It cannot submit a claim or change a status, so
+it advises the approver rather than acting.
+
+- `Review expense exp-002 for emp-002 and recommend a decision.`
+- `Has emp-002 claimed anything similar recently?` — the history check the assistant never does
+
 **Workflows → expense-workflow**
 
 Run with `employeeId: emp-002` and
 `requestText: Team dinner with 4 people in Chicago, $180 total`. The run stops at
-`human-approval`; approve or reject it in Studio to finish.
+`human-approval` with the reviewer's recommendation attached; approve or reject it in Studio
+to finish. On this claim the two agents disagree: the assistant flags the $30/person cap and
+submits anyway, and the reviewer recommends rejecting it.
 
 **MCP Servers**
 
