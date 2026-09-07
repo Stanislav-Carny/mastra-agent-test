@@ -161,6 +161,47 @@ const steps = {
     await shot(page, '05-workflow-resumed');
     await page.close();
   },
+
+  /* ---------------------------------------------------------------- stage 06 */
+
+  /**
+   * The stage 06 extension: the agent owns the workflow, so a receipt dropped into chat
+   * starts the whole approval process. Both images come from one conversation.
+   */
+  '06-chat-workflow': async () => {
+    const page = await open(`${afterUrl}/agents/expense-agent/chat/new`);
+
+    await page.getByRole('button', { name: 'Add attachment' }).click();
+    await page.waitForTimeout(1200);
+    const [chooser] = await Promise.all([
+      page.waitForEvent('filechooser', { timeout: 15_000 }),
+      page.getByText('Add a local file', { exact: false }).click(),
+    ]);
+    await chooser.setFiles(join(repoRoot, 'docs', 'assets', 'sample-receipt.png'));
+    await page.waitForTimeout(3000);
+    await page.keyboard.press('Escape'); // close the attachment menu so it is out of shot
+    await page.waitForTimeout(800);
+
+    await page
+      .getByPlaceholder('Enter your message...')
+      .fill("Here's my receipt for a team dinner. Please submit it for emp-002.");
+    await page.keyboard.press('Enter');
+
+    // Reading the receipt, the directory lookup, the policy search and the routing call
+    // are all model round trips before the workflow suspends.
+    const approvalStep = page.getByText('human-approval').first();
+    await approvalStep.waitFor({ timeout: 120_000 });
+    await page.waitForTimeout(5000);
+
+    // Top of the exchange: the receipt, the tools it chose, and the workflow starting.
+    await shot(page, '06-receipt-in-chat');
+
+    // The pause itself renders below the fold, so scroll it into frame for the second shot.
+    await approvalStep.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(2000);
+    await shot(page, '06-chat-workflow-suspended');
+    await page.close();
+  },
 };
 
 const selected = only.length > 0 ? only : Object.keys(steps);

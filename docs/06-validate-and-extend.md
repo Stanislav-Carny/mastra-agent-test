@@ -119,6 +119,10 @@ This is the demo worth showing someone who is sceptical about all of this: a pho
 receipt goes in, a routed and policy-checked claim comes out, and it still stops for a
 human before anything is approved.
 
+Both screens are in the
+[Studio walkthrough](studio-walkthrough.md#stage-06--a-receipt-starts-the-whole-thing) if
+you want to see where you are heading before you start, or compare against it afterwards.
+
 **Add a tool to an MCP service (15 min).** Add something like `getTeamSpend(department)`
 to the employee or expense service. The seed data has 100 employees and 150 claims, so an
 aggregate like this returns something worth looking at. Notice you do **not** have to

@@ -34,7 +34,7 @@ different from their neighbour's assumes they broke something.
       [Studio walkthrough](studio-walkthrough.md) is the same sequence of screens as
       screenshots, in stage order.
 - [ ] Consider printing the
-      [walkthrough handout](mastra-studio-walkthrough.pdf) (13 pages) for the room. People
+      [walkthrough handout](mastra-studio-walkthrough.pdf) (16 pages) for the room. People
       debug faster when they can compare their screen against paper instead of tabbing away
       from the thing they are debugging.
 
