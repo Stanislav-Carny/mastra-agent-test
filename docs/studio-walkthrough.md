@@ -5,8 +5,9 @@ Every checkpoint in the workshop, as a picture. Use this when you want to know w
 facilitating and want the demo laid out in order.
 
 This is a companion to stages [01](01-explore-the-kit.md) to
-[05](05-approval-workflow.md), not a replacement. The stages tell you what to build; this
-tells you what you should see afterwards.
+[05](05-approval-workflow.md), plus the [stage 06](06-validate-and-extend.md) extension
+that puts the workflow in the agent's hands. It is not a replacement: the stages tell you
+what to build; this tells you what you should see afterwards.
 
 <!-- pdf:skip -->
 There is a printable version at
@@ -218,6 +219,52 @@ wrong.
 
 ---
 
+## Stage 06 — A receipt starts the whole thing
+
+*This is the [stage 06 extension](06-validate-and-extend.md#extensions), not part of the
+main build. Not everyone will get here in the time, so treat it as the demo rather than a
+checkpoint you have to hit.*
+
+Up to now the agent and the workflow have lived in separate tabs: you ran the workflow
+yourself, from a form. The extension gives the agent the workflow as one of its tools, and
+that changes who starts the process.
+
+**Do this:** in the Expense Assistant chat, use **Add attachment → Add a local file**,
+attach [`assets/sample-receipt.png`](assets/sample-receipt.png), and send *"here's my
+receipt for a team dinner. Please submit it for emp-002."*
+
+![The agent reading an attached receipt, calling three tools, then starting the workflow](images/06-receipt-in-chat.png)
+
+**Look for** four separate things in that one reply:
+
+- **The receipt was read.** Nobody typed `$180.00`, a vendor or a guest count. The chat
+  model handles images, so the picture is the input.
+- **The tools it chose**, unprompted: `getEmployee`, `searchExpensePolicy`,
+  `calculateApprovalRoute` — and the `expense-policy-citations` skill firing underneath.
+- **The policy arithmetic.** It works out that a $30/person cap over 4 guests is $120, so
+  $180 is $60 over, and says a human approver will make the final call.
+- **It submits anyway.** That last part is deliberate, and it is the interesting design
+  decision in this whole workshop. An agent that refuses to submit an over-cap claim feels
+  responsible, but it has quietly taken over the decision the `human-approval` step exists
+  to make. The reference agent is told to submit it and record the breach, because the
+  approver decides. Yours will probably stop and ask until you tell it otherwise.
+
+Then it calls the workflow, and Studio draws the run inline in the conversation. Scroll
+down and you can watch the same four steps you ran from a form in stage 05:
+
+![The expense workflow drawn inside the chat, paused at the human-approval step](images/06-chat-workflow-suspended.png)
+
+**Look for:** the graph rendered inside the message, and `human-approval` marked as
+waiting with the run stopped there. The chat is now suspended too — the pause travelled
+all the way out to whoever was talking to the agent. Resume it from **Workflows → Recent
+runs**, exactly as in stage 05, and the claim completes.
+
+That is the version worth showing someone sceptical about all of this: a photo of a
+receipt goes in, a routed and policy-checked claim comes out, and it still stops for a
+human before anything is approved.
+
+---
+
 ## Re-capturing these images
 
 *Maintainers only. This section is left out of the printable handout.*
@@ -233,8 +280,13 @@ npm run docs:screenshots -- --before http://localhost:4111 --after http://localh
 ```
 
 Pass step names to redo just part of it, for example
-`npm run docs:screenshots -- 05-workflow`. The stage 05 step captures the suspended and
-resumed images from a single run, so the two always show the same claim.
+`npm run docs:screenshots -- 05-workflow`. The stage 05 and 06 steps each capture both of
+their images from a single run, so the pair always shows the same claim.
+
+The stage 06 step needs the receipt image on disk; `npm run docs:receipt` regenerates it.
+Because it is a real conversation, the agent's wording changes between captures — check
+the new screenshot still shows the flag and the submission before you commit it, since
+that is what the surrounding text promises.
 
 The agent and workflow steps make real model calls, so a full capture takes a couple of
 minutes and costs a few cents.
