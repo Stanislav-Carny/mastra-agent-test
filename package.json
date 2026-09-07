@@ -20,6 +20,7 @@
     "docs:screenshots": "node scripts/capture-studio-screenshots.mjs",
     "docs:pdf": "node scripts/build-walkthrough-pdf.mjs",
     "docs:receipt": "node scripts/build-sample-receipt.mjs",
+    "test:receipts": "node scripts/build-test-case-receipts.mjs",
     "e2e": "node scripts/e2e-receipt-flow.mjs"
   },
   "devDependencies": {

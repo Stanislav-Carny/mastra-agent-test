@@ -68,6 +68,13 @@ to restore the seeded fixture. And the agent's choices come from a model, so an 
 step can fail on one run and pass on the next — read a failure as "look at this", not
 "the workshop is broken".
 
+**Rehearsing the interesting failures.** [`test-cases/`](../test-cases/README.md) has nine
+hand-run scenarios with receipts already made: over the cap, never reimbursable, months
+late, in euros, duplicated, and two that should not reach the workflow at all. Work through
+them once before facilitating and you will have seen most of what the room can hit, and
+you will have three or four demos better than the happy path. Reset the database between
+full passes or the reviewer will flag your second pass as duplicates — correctly.
+
 ## Run of show
 
 | Time | Minutes | What |

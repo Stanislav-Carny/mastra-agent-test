@@ -27,6 +27,12 @@ Then in Studio, one pass over everything:
 
 If all five hold, you have built the whole thing.
 
+For a harder pass, work through [`test-cases/`](../test-cases/README.md): nine scenarios
+with ready-made receipts, covering a claim over its cap, one that is never reimbursable,
+one submitted months late, one in euros, and a duplicate. Each folder says what a good run
+looks like, so you can tell whether your build reaches the same conclusions as the
+reference.
+
 ## Compare with the reference
 
 ```bash
