@@ -1,0 +1,19 @@
+title: Vibe-coding agents with Cursor and Mastra
+description: A hands-on workshop building an expense assistant with Mastra
+theme: jekyll-theme-cayman
+
+plugins:
+  - jekyll-readme-index
+  - jekyll-relative-links
+  - jekyll-optional-front-matter
+  - jekyll-titles-from-headings
+
+relative_links:
+  enabled: true
+  collections: true
+
+readme_index:
+  with_frontmatter: true
+
+include:
+  - _config.yml
