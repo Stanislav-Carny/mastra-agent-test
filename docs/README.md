@@ -1,5 +1,7 @@
 # Vibe-coding agents with Cursor and Mastra
 
+No git, or want the short version? See the [quickstart](index.md) instead.
+
 A 90-minute, hands-on workshop. You will build an expense assistant by describing what
 you want to Cursor, then checking the result in a visual interface called Mastra Studio.
 
