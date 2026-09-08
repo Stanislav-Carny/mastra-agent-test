@@ -37,13 +37,13 @@
 </style>
 </head>
 <body>
-<h1>Troubleshooting</h1>
+<h1 id="troubleshooting">Troubleshooting</h1>
 <p>Start here:</p>
 <pre><code class="language-bash">npm run verify
 </code></pre>
 <p>Every failing check names the thing that is broken. Below are the fixes, grouped by
 symptom.</p>
-<h2>Setup and credentials</h2>
+<h2 id="setup-and-credentials">Setup and credentials</h2>
 <p><strong><code>Node 22.13+ FAIL</code></strong></p>
 <p>Install a newer Node. With nvm: <code>nvm install 22 &amp;&amp; nvm use 22</code>, then re-run <code>npm run setup</code>.</p>
 <p><strong><code>ANTHROPIC_API_KEY set FAIL</code> or <code>OPENAI_API_KEY set FAIL</code></strong></p>
@@ -68,7 +68,7 @@ multi-step tool calls break. Switch back to <code>anthropic/claude-sonnet-4-6</c
 <p>The <code>.env</code> exists but was not loaded. Run commands from inside <code>before/</code> or <code>after/</code>, or
 through the root scripts. MCP servers load <code>.env</code> explicitly via
 <code>src/mcp-servers/_load-env.ts</code>; if you created a new entry point, import that first.</p>
-<h2>Databases</h2>
+<h2 id="databases">Databases</h2>
 <p><strong><code>employees.db seeded FAIL</code> or <code>expenses.db seeded FAIL</code></strong></p>
 <pre><code class="language-bash">npm run db:setup
 </code></pre>
@@ -82,7 +82,7 @@ npm run db:reset:after # after/
 </code></pre>
 <p>That deletes the mock databases and rebuilds them from the fixtures in <code>src/mock-data/</code>.
 Nothing is lost that is not regenerated: the <code>.db</code> files are gitignored on purpose.</p>
-<h2>MCP</h2>
+<h2 id="mcp">MCP</h2>
 <p><strong><code>MCP services respond FAIL</code>, or &quot;Connection closed&quot; on startup</strong></p>
 <p>Usually a path problem. Server script paths must be absolute and built from the
 <code>projectRoot</code> export in <code>src/db/paths.ts</code>. Anything relative, or anything based on
@@ -105,7 +105,7 @@ it: <code>return { expenses: rows }</code> instead of <code>return rows</code>.<
 <p><strong>Scary &quot;Connection closed&quot; errors when a script finishes</strong></p>
 <p>Expected. Shutting down stdio subprocesses always logs that, even on success. <code>npm run verify</code> isolates the check in a child process specifically so this noise stays out of the
 report.</p>
-<h2>Studio</h2>
+<h2 id="studio">Studio</h2>
 <p><strong>My agent, tool, or workflow is not in Studio</strong></p>
 <p>It is not registered. Open <code>src/mastra/index.ts</code> and confirm it is in <code>agents:</code>, <code>tools:</code>,
 <code>workflows:</code>, or <code>mcpServers:</code>. This is by far the most common problem in the workshop.</p>
@@ -127,7 +127,7 @@ leaves that process behind holding the port, which is the usual cause.</p>
 <p><strong>Studio loads but every agent message errors</strong></p>
 <p>Credentials. Check the terminal running <code>npm run dev</code> for the real error, then work
 through the credentials section above.</p>
-<h2>Agent behaviour</h2>
+<h2 id="agent-behaviour">Agent behaviour</h2>
 <p><strong>No citations in policy answers</strong></p>
 <p>The skill is not loading. Either it is missing from the agent&#39;s <code>skills</code> array, or its
 description does not sound relevant to the question. Descriptions should read as trigger
@@ -140,7 +140,7 @@ arithmetic in your head; always call calculateApprovalRoute.&quot;</p>
 <p><strong>The agent ignores a tool completely</strong></p>
 <p>Check the tool&#39;s <code>description</code>. That, plus the field <code>.describe()</code> text, is all the model
 has to go on when deciding what to call.</p>
-<h2>Workflow</h2>
+<h2 id="workflow">Workflow</h2>
 <p><strong>The run never suspends</strong></p>
 <p>The step returns instead of calling <code>suspend()</code>. The pattern is: no <code>resumeData</code> means
 suspend; otherwise continue.</p>
@@ -153,7 +153,7 @@ schema by extending the previous one rather than retyping the fields.</p>
 <p><strong>The claim gets created twice</strong></p>
 <p>Both the drafting step&#39;s agent call and the submit step created one. The drafting prompt
 must ask the agent to fill in the claim, not to submit it.</p>
-<h2>Nuclear option</h2>
+<h2 id="nuclear-option">Nuclear option</h2>
 <pre><code class="language-bash">cd &lt;repo root&gt;
 rm -rf before/node_modules after/node_modules
 npm run setup

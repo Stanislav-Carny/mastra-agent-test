@@ -37,10 +37,10 @@
 </style>
 </head>
 <body>
-<h1>00 — Setup</h1>
+<h1 id="00--setup">00 — Setup</h1>
 <p><strong>Do this before the workshop starts.</strong> It takes about 10 minutes, most of it waiting for
 <code>npm install</code>. Doing it live will cost you a third of the session.</p>
-<h2>What you need</h2>
+<h2 id="what-you-need">What you need</h2>
 <ul>
 <li><strong>Node 22.13 or newer.</strong> Check with <code>node --version</code>. If it is older, install a newer
 one (<code>nvm install 22</code> if you use nvm; the repo has a <code>.nvmrc</code>).</li>
@@ -49,12 +49,16 @@ one (<code>nvm install 22</code> if you use nvm; the repo has a <code>.nvmrc</co
 OpenAI key for the policy search index. If your company routes AI traffic through a
 gateway, you also need the two base URLs.</li>
 </ul>
-<h2>Steps</h2>
-<p><strong>1. Clone and run setup</strong></p>
+<h2 id="steps">Steps</h2>
+<p><strong>1. Get the repo and run setup</strong></p>
+<p>Either clone it:</p>
 <pre><code class="language-bash">git clone &lt;repo-url&gt;
 cd ABSL-AGENT-EXAMPLE
 npm run setup
 </code></pre>
+<p>Or, if you do not use git: on the repo&#39;s GitHub page click <strong>Code → Download ZIP</strong>,
+unzip it, open a terminal in the unzipped folder, and run <code>npm run setup</code>.</p>
+<p>Either way:</p>
 <p>That checks your Node version, creates a <code>.env</code> in each project, installs dependencies
 for both projects, and builds the mock SQLite databases. It is safe to re-run at any time.</p>
 <p>It will finish by telling you that your API keys are missing. That is expected.</p>
@@ -98,7 +102,7 @@ reply means your key, your base URL, and your model all work.</p>
 <p><strong>5. Open the repo in Cursor</strong></p>
 <p>Open the repo root (not <code>before/</code> on its own) so Cursor can see the docs, both projects,
 and the <code>mastra</code> skill.</p>
-<h2>You are ready when</h2>
+<h2 id="you-are-ready-when">You are ready when</h2>
 <ul>
 <li><code>npm run verify</code> is all green</li>
 <li>Studio loads at <a href="http://localhost:4111">http://localhost:4111</a> and Setup Check replies</li>

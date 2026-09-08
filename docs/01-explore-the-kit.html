@@ -37,12 +37,12 @@
 </style>
 </head>
 <body>
-<h1>01 — Explore the kit</h1>
+<h1 id="01--explore-the-kit">01 — Explore the kit</h1>
 <p><strong>Time: 15 minutes. You write no code in this stage.</strong></p>
-<h2>Goal</h2>
+<h2 id="goal">Goal</h2>
 <p>Understand what already exists, so that when you start prompting you know what you are
 connecting to. Skipping this is the most common reason people get lost in stage 03.</p>
-<h2>The mental model</h2>
+<h2 id="the-mental-model">The mental model</h2>
 <p>You have been dropped into a company that already has three systems. Another team owns
 them. You cannot change them. Your job is to build an assistant on top.</p>
 <p>Each system runs as its <strong>own process</strong> and speaks <strong>MCP</strong> over stdin/stdout. That is the
@@ -55,21 +55,21 @@ protocol rather than by importing a function.</p>
       ├──────────────►  expense-policy-server.ts ─►  expense-policy.db  (vector index)
       └──────────────►  expense-tool-server.ts  ──►  expenses.db
 </code></pre>
-<h2>Look around in Studio</h2>
+<h2 id="look-around-in-studio">Look around in Studio</h2>
 <p>Start it if it is not running:</p>
 <pre><code class="language-bash">cd before
 npm run dev
 </code></pre>
 <p>Open <a href="http://localhost:4111">http://localhost:4111</a>. The first thing to notice is how <strong>empty</strong> it is: one agent
 called <strong>Setup Check</strong>, and nothing under Tools, Workflows, or MCP Servers.
-(<a href="studio-walkthrough.md#stage-01--the-empty-starting-point">Screenshot</a>.)</p>
+(<a href="studio-walkthrough.html#stage-01--the-empty-starting-point">Screenshot</a>.)</p>
 <p>That is not a bug, and it is the most useful thing Studio will teach you today. Studio
 shows exactly what is registered in <code>src/mastra/index.ts</code> and nothing else. The three
 services exist on disk, in <code>src/mcp-servers/</code>, but no code has connected to them yet, so
 Studio has no idea they are there. Your job over the next hour is to fill this sidebar.</p>
 <p>If you skipped it during setup, say hello to <strong>Setup Check</strong> now. It has no tools and
 knows nothing about expenses; it exists only to prove your model credentials work.</p>
-<h2>Confirm the three services are alive</h2>
+<h2 id="confirm-the-three-services-are-alive">Confirm the three services are alive</h2>
 <p>You cannot click on them yet, so check them from the terminal instead:</p>
 <pre><code class="language-bash">npm run verify
 </code></pre>
@@ -80,7 +80,7 @@ knows nothing about expenses; it exists only to prove your model credentials wor
 counted: 2 from the employee directory, 1 from the policy knowledge base, and 4 from the
 expense submission service. They work. You just have no way to reach them from your app,
 which is stage 03&#39;s job — and that is where you will call one by hand in Studio.</p>
-<h2>Look around in the code</h2>
+<h2 id="look-around-in-the-code">Look around in the code</h2>
 <p>Ask Cursor rather than reading everything yourself:</p>
 <pre><code>Give me a tour of the before/ project. What is already built, what is missing,
 and which files am I expected to create? Do not write any code yet.
@@ -119,12 +119,12 @@ It lists the four things you are about to add. That file is your checklist.</p>
 <p>Also open <a href="../before/src/mock-data/expense-policy-docs.ts">`src/mock-data/expense-policy-docs.ts`</a>
 and skim the policies. Knowing that meals are capped and that equipment needs extra
 approval will help you tell a good agent answer from a plausible-sounding wrong one.</p>
-<h2>The one rule to remember</h2>
+<h2 id="the-one-rule-to-remember">The one rule to remember</h2>
 <p><strong>The expense MCP service is the only thing that writes to <code>expenses.db</code>.</strong></p>
 <p>When you get to the workflow in stage 05, it will be tempting to let it open the database
 directly, and Cursor may well suggest that. Do not. Two write paths to the same data is
 how real systems rot. Everything goes through the service that owns it.</p>
-<h2>Check yourself</h2>
+<h2 id="check-yourself">Check yourself</h2>
 <p>Answer these before moving on:</p>
 <ol>
 <li>If you wanted the agent to look up an employee, would you write a tool or use MCP?

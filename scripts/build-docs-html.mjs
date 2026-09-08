@@ -24,11 +24,32 @@ const files = readdirSync(docsDir)
   .filter((name) => name.endsWith('.md') && !SKIP.has(name))
   .sort();
 
+/**
+ * Matches GitHub's heading slug algorithm, since the anchors in these docs (e.g.
+ * `studio-walkthrough.md#stage-01--the-empty-starting-point`) were written against it:
+ * strip anything that isn't a letter, digit, or space, lowercase, then turn every space
+ * into a hyphen without collapsing runs.
+ */
+function slugify(text) {
+  return text
+    .replace(/[^A-Za-z0-9 ]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/ /g, '-');
+}
+
 const renderer = new marked.Renderer();
+
 renderer.link = ({ href, text }) => {
-  const localMd = !href.startsWith('http') && href.endsWith('.md');
-  const target = localMd ? href.replace(/\.md$/, '.html') : href;
+  const localMd = !href.startsWith('http') && /\.md(#.*)?$/.test(href);
+  const target = localMd ? href.replace(/\.md(?=#|$)/, '.html') : href;
   return `<a href="${target}">${text}</a>`;
+};
+
+renderer.heading = function ({ tokens, depth }) {
+  const html = this.parser.parseInline(tokens);
+  const id = slugify(html.replace(/<[^>]+>/g, ''));
+  return `<h${depth} id="${id}">${html}</h${depth}>\n`;
 };
 
 function titleOf(markdown, fallback) {

@@ -37,12 +37,12 @@
 </style>
 </head>
 <body>
-<h1>02 — Build the tool</h1>
+<h1 id="02--build-the-tool">02 — Build the tool</h1>
 <p><strong>Time: 15 minutes. Concept: Tool.</strong></p>
-<h2>Goal</h2>
+<h2 id="goal">Goal</h2>
 <p>Write one deterministic function the agent can call, and register it. This is the
 smallest possible unit of agent capability, and the easiest to get right, so we start here.</p>
-<h2>Why this belongs in code</h2>
+<h2 id="why-this-belongs-in-code">Why this belongs in code</h2>
 <p>The submission policy says:</p>
 <blockquote>
 <p>Claims are auto-approved under $50; claims between $50 and $500 require manager
@@ -54,7 +54,7 @@ inconsistent at boundary arithmetic, and &quot;is $500 over $500?&quot; is exact
 question where a plausible wrong answer costs someone money.</p>
 <p>The rule of thumb: <strong>if the answer must be identical every time, it belongs in a tool.</strong>
 Retrieval for the prose, code for the arithmetic.</p>
-<h2>Prompt</h2>
+<h2 id="prompt">Prompt</h2>
 <p>Paste this into Cursor, with <code>before/</code> open:</p>
 <pre><code>I need the expense assistant to work out who has to approve a claim. It has to give
 the same answer every single time, so this should be real code, not something the
@@ -79,7 +79,7 @@ going through the assistant.
 mention of Mastra&#39;s API. <a href="../before/AGENTS.html">`before/AGENTS.md`</a> already tells Cursor
 where things live and to load the <code>mastra</code> skill before writing any Mastra code. Describe
 the outcome and the rules; let the tooling handle the conventions.</p>
-<h2>What should change</h2>
+<h2 id="what-should-change">What should change</h2>
 <p>Cursor chooses the file names, so yours may read slightly differently. The shape is what
 matters:</p>
 <ul>
@@ -89,7 +89,7 @@ in Studio</li>
 </ul>
 <p>If Cursor edited anything in <code>src/db/</code>, <code>src/mcp-servers/</code>, or <code>src/mock-data/</code>, tell it
 to revert that. Those are off limits.</p>
-<h2>Read the diff</h2>
+<h2 id="read-the-diff">Read the diff</h2>
 <p>Four things to check, in order of how often they go wrong:</p>
 <ol>
 <li><strong>The boundaries.</strong> $50 exactly should require a manager, not auto-approve. $500
@@ -100,10 +100,10 @@ the tool never gets called. It should say what the tool does <em>and</em> hint w
 sees when filling in arguments.</li>
 <li><strong>The plain function is exported.</strong> You need it in stage 05.</li>
 </ol>
-<h2>Check in Studio</h2>
+<h2 id="check-in-studio">Check in Studio</h2>
 <p>Restart <code>npm run dev</code> if it is running, then go to <strong>Tools</strong> in the sidebar. Your tool
 should be listed as <code>calculateApprovalRoute</code>
-(<a href="studio-walkthrough.md#stage-02--your-first-tool">screenshot</a>). Run it three times:</p>
+(<a href="studio-walkthrough.html#stage-02--your-first-tool">screenshot</a>). Run it three times:</p>
 <table>
 <thead>
 <tr>
@@ -125,7 +125,7 @@ should be listed as <code>calculateApprovalRoute</code>
 </tr>
 </tbody></table>
 <p>The middle row is the one that catches off-by-one errors.</p>
-<h2>If it went wrong</h2>
+<h2 id="if-it-went-wrong">If it went wrong</h2>
 <p><strong>The tool is not in Studio.</strong> It is not registered. Open <code>src/mastra/index.ts</code> and check
 for a <code>tools:</code> entry. Restart the dev server; adding a new top-level key does not always
 hot-reload.</p>
@@ -134,7 +134,7 @@ hot-reload.</p>
 <p><strong>Cursor wrote the thresholds inline instead of as constants.</strong> Minor, but ask it to
 extract them. You want the numbers in one obvious place when someone asks &quot;where does
 $500 come from?&quot;.</p>
-<h2>Checkpoint</h2>
+<h2 id="checkpoint">Checkpoint</h2>
 <p>You have a working tool that gives the same answer every time, and you have seen it run
 in Studio without any agent involved. That separation matters: tools are testable on
 their own.</p>

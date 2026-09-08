@@ -37,7 +37,7 @@
 </style>
 </head>
 <body>
-<h1>Studio walkthrough</h1>
+<h1 id="studio-walkthrough">Studio walkthrough</h1>
 <p>Every checkpoint in the workshop, as a picture. Use this when you want to know what
 &quot;working&quot; is supposed to look like before you go hunting for a bug, or when you are
 facilitating and want the demo laid out in order.</p>
@@ -55,7 +55,7 @@ finished <code>after/</code> project, because that is the only place all the pie
 so its sidebar is fuller than yours will be at that moment. Judge the panel you are
 working in, not the item count next to it.</p>
 <hr>
-<h2>Getting it running</h2>
+<h2 id="getting-it-running">Getting it running</h2>
 <p>Assuming <a href="00-setup.html">setup</a> is done and your API keys are in place, three commands get
 you to the first screenshot.</p>
 <p><strong>1. Check the environment.</strong> From the repository root:</p>
@@ -83,7 +83,7 @@ the second one just lands on 4112.</p>
 after adding anything new to <code>src/mastra/index.ts</code>, since a new top-level key does not
 always hot-reload.</p>
 <hr>
-<h2>Stage 01 — The empty starting point</h2>
+<h2 id="stage-01--the-empty-starting-point">Stage 01 — The empty starting point</h2>
 <p><strong>Do this:</strong> <code>cd before &amp;&amp; npm run dev</code>, then open the URL from the startup banner (4111
 unless something else already has it).</p>
 <p><img src="images/01-empty-studio.png" alt="Mastra Studio on the before project, showing only the Setup Check agent"></p>
@@ -101,7 +101,7 @@ code has connected to them yet. Filling this sidebar is the whole workshop.</p>
 <p>A reply means your API key, base URL, and model id are all good. The &quot;Memory not enabled&quot;
 notice on the left is expected: this agent has no memory, so nothing is saved as a thread.</p>
 <hr>
-<h2>Stage 02 — Your first tool</h2>
+<h2 id="stage-02--your-first-tool">Stage 02 — Your first tool</h2>
 <p><strong>Do this:</strong> build the approval-route tool, register it, restart the dev server, and open
 <strong>Tools</strong>.</p>
 <p><img src="images/02-tools-list.png" alt="The Tools list in Studio"></p>
@@ -119,7 +119,7 @@ how a perfectly correct tool ends up never being used.</p>
 Test <code>20</code>, <code>50</code>, <code>500</code>, and <code>640</code>: they should give you no approvers, manager, manager,
 and manager plus finance.</p>
 <hr>
-<h2>Stage 03 — The three services</h2>
+<h2 id="stage-03--the-three-services">Stage 03 — The three services</h2>
 <p><strong>Do this:</strong> build the MCP client, register the proxies, restart, and open <strong>MCP Servers</strong>.</p>
 <p><img src="images/03-mcp-servers.png" alt="The MCP Servers page listing employee, policy and expenseTool"></p>
 <p><strong>Look for:</strong> three rows named <code>employee</code>, <code>policy</code>, and <code>expenseTool</code> — the keys you gave
@@ -135,7 +135,7 @@ separation is the entire point of MCP.</p>
 output to be an object, so the array is wrapped in one. A tool that returns a bare array
 fails with <code>expected record, received array</code>.</p>
 <hr>
-<h2>Stage 04 — The agent decides</h2>
+<h2 id="stage-04--the-agent-decides">Stage 04 — The agent decides</h2>
 <p><strong>Do this:</strong> build the citation skill and the agent, restart, and open
 <strong>Agents → Expense Assistant</strong>. Ask a policy question first:</p>
 <p><img src="images/04-agent-citation.png" alt="The agent answering a policy question with a citation"></p>
@@ -160,7 +160,7 @@ difference is the clearest definition of &quot;agent&quot; anyone will give you 
 the &quot;equipment over $200 needs IT approval&quot; rule came from <strong>policy search</strong>. Deterministic
 arithmetic and prose knowledge, arriving through different doors, merged into one answer.</p>
 <hr>
-<h2>Stage 05 — The workflow pauses</h2>
+<h2 id="stage-05--the-workflow-pauses">Stage 05 — The workflow pauses</h2>
 <p><strong>Do this:</strong> build the workflow, restart, open <strong>Workflows → expense-workflow</strong>, and run it
 with <code>emp-002</code> and <code>Team dinner with 4 people in Chicago, $180 total</code>.</p>
 <p><img src="images/05-workflow-suspended.png" alt="A suspended workflow run waiting at the human-approval step"></p>
@@ -185,8 +185,8 @@ with the <code>expenseId</code> from the result: the status should now be <code>
 A version that opens the database directly produces an identical screenshot and is still
 wrong.</p>
 <hr>
-<h2>Stage 06 — A receipt starts the whole thing</h2>
-<p><em>This is the <a href="06-validate-and-extend.md#extensions">stage 06 extension</a>, not part of the
+<h2 id="stage-06--a-receipt-starts-the-whole-thing">Stage 06 — A receipt starts the whole thing</h2>
+<p><em>This is the <a href="06-validate-and-extend.html#extensions">stage 06 extension</a>, not part of the
 main build. Not everyone will get here in the time, so treat it as the demo rather than a
 checkpoint you have to hit.</em></p>
 <p>Up to now the agent and the workflow have lived in separate tabs: you ran the workflow
@@ -221,7 +221,7 @@ runs</strong>, exactly as in stage 05, and the claim completes.</p>
 receipt goes in, a routed and policy-checked claim comes out, and it still stops for a
 human before anything is approved.</p>
 <hr>
-<h2>Re-capturing these images</h2>
+<h2 id="recapturing-these-images">Re-capturing these images</h2>
 <p><em>Maintainers only. This section is left out of the printable handout.</em></p>
 <p>Studio is a live application, so these go stale when the UI or the reference solution
 changes. They are generated, not hand-made — do not edit them.</p>

@@ -14,13 +14,20 @@
 
 ## Steps
 
-**1. Clone and run setup**
+**1. Get the repo and run setup**
+
+Either clone it:
 
 ```bash
 git clone <repo-url>
 cd ABSL-AGENT-EXAMPLE
 npm run setup
 ```
+
+Or, if you do not use git: on the repo's GitHub page click **Code → Download ZIP**,
+unzip it, open a terminal in the unzipped folder, and run `npm run setup`.
+
+Either way:
 
 That checks your Node version, creates a `.env` in each project, installs dependencies
 for both projects, and builds the mock SQLite databases. It is safe to re-run at any time.

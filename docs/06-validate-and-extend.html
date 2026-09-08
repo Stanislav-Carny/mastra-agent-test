@@ -37,12 +37,12 @@
 </style>
 </head>
 <body>
-<h1>06 — Validate and extend</h1>
+<h1 id="06--validate-and-extend">06 — Validate and extend</h1>
 <p><strong>Time: 10 minutes. Concept: knowing whether it actually works.</strong></p>
-<h2>Goal</h2>
+<h2 id="goal">Goal</h2>
 <p>Confirm your build is complete, compare it against the reference, and pick one extension
 to try.</p>
-<h2>Validate</h2>
+<h2 id="validate">Validate</h2>
 <pre><code class="language-bash">cd before
 npm run typecheck
 npm run verify
@@ -77,7 +77,7 @@ npm run verify
 </tr>
 </tbody></table>
 <p>If all five hold, you have built the whole thing.</p>
-<h2>Compare with the reference</h2>
+<h2 id="compare-with-the-reference">Compare with the reference</h2>
 <pre><code class="language-bash">diff -ru before/src/mastra after/src/mastra
 </code></pre>
 <p>Differences are expected and usually fine. Worth a closer look at:</p>
@@ -95,7 +95,7 @@ a skill.</li>
 formatting. Tell me only about differences that would change behaviour, and which
 version you would keep and why.
 </code></pre>
-<h2>Extensions</h2>
+<h2 id="extensions">Extensions</h2>
 <p>Pick one. They are ordered by effort.</p>
 <p><strong>Swap the model provider (5 min).</strong> Change the <code>model</code> string in your agent to
 <code>openai/gpt-4.1-mini</code> and re-run the policy question. This is the payoff of the model
@@ -151,7 +151,7 @@ $45/person against the $30/person internal-meal cap.</p>
 receipt goes in, a routed and policy-checked claim comes out, and it still stops for a
 human before anything is approved.</p>
 <p>Both screens are in the
-<a href="studio-walkthrough.md#stage-06--a-receipt-starts-the-whole-thing">Studio walkthrough</a> if
+<a href="studio-walkthrough.html#stage-06--a-receipt-starts-the-whole-thing">Studio walkthrough</a> if
 you want to see where you are heading before you start, or compare against it afterwards.</p>
 <p><strong>Add a tool to an MCP service (15 min).</strong> Add something like <code>getTeamSpend(department)</code>
 to the employee or expense service. The seed data has 100 employees and 150 claims, so an
@@ -163,7 +163,7 @@ the MCP payoff. Remember to return an object, not a bare array.</p>
 Mastra&#39;s conditional branching.</p>
 <p><strong>Add memory (20 min).</strong> Give the agent memory so it remembers an employee id across a
 conversation, instead of asking for it each time.</p>
-<h2>What to take away</h2>
+<h2 id="what-to-take-away">What to take away</h2>
 <ul>
 <li><strong>Agent or workflow?</strong> Does the right sequence depend on the input? Agent. Is the
 sequence fixed and does it need to be auditable or pausable? Workflow. Most real
@@ -180,7 +180,7 @@ Skill.</li>
 <p>And the thing that generalises beyond Mastra: with Cursor, the bottleneck stopped being
 how fast you can write the code and became how fast you can tell whether the code is
 right. That is why every stage ended in Studio rather than in the editor.</p>
-<h2>Keep going</h2>
+<h2 id="keep-going">Keep going</h2>
 <ul>
 <li><a href="https://mastra.ai/llms.txt">Mastra documentation</a></li>
 <li><a href="../after/README.html">`after/README.md`</a> — the reference, with things to try</li>

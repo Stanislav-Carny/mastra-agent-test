@@ -37,19 +37,19 @@
 </style>
 </head>
 <body>
-<h1>04 — Agent and skill</h1>
+<h1 id="04--agent-and-skill">04 — Agent and skill</h1>
 <p><strong>Time: 25 minutes. Concepts: Agent, Skill.</strong></p>
 <p>This is the centre of the workshop. Take the time.</p>
-<h2>Goal</h2>
+<h2 id="goal">Goal</h2>
 <p>Build an agent that decides for itself which of your eight tools to use, and give it a
 skill that makes its policy answers trustworthy.</p>
-<h2>What makes this an agent</h2>
+<h2 id="what-makes-this-an-agent">What makes this an agent</h2>
 <p>Up to now you have written capabilities. Nothing has <em>decided</em> anything. An agent is the
 piece that does: an LLM, a set of instructions, and a set of tools, in a loop. You give it
 a question; it picks a tool, reads the result, picks another, and eventually answers.</p>
 <p>You do not tell it the order. That is the trade: you gain flexibility and lose
 predictability. Stage 05 is about getting predictability back where you need it.</p>
-<h2>What a skill is for</h2>
+<h2 id="what-a-skill-is-for">What a skill is for</h2>
 <p>Your agent needs a rule: <em>never state a policy limit without citing the document it came
 from.</em> You could put that in the instructions. For one rule that is fine. But instructions
 are sent on every single request, so as rules accumulate the prompt bloats and the
@@ -63,7 +63,7 @@ Policy-citation rules load for &quot;what is the meal limit?&quot; and stay out 
 to write correct Mastra code. Same word, different audience: this one teaches your
 <em>agent</em> how to behave at runtime.</p>
 </blockquote>
-<h2>Prompt (part 1: the skill)</h2>
+<h2 id="prompt-part-1-the-skill">Prompt (part 1: the skill)</h2>
 <pre><code>When the assistant answers anything about expense policy — a limit, an approval rule, a
 receipt requirement, a deadline — the answer has to be trustworthy enough that an
 employee can act on it. So whenever a question is about policy, it must:
@@ -79,7 +79,7 @@ Package that up as expense-policy-citations: a named behaviour the assistant pic
 only when a question is actually about policy, so it isn&#39;t carrying these rules around
 for every unrelated request.
 </code></pre>
-<h2>Prompt (part 2: the agent)</h2>
+<h2 id="prompt-part-2-the-agent">Prompt (part 2: the agent)</h2>
 <pre><code>Now build the assistant itself, so employees can chat with it in Mastra Studio. Call it
 Expense Assistant, with expense-agent as its identifier, and describe it as helping
 employees check expense policy and submit claims.
@@ -98,14 +98,14 @@ How I want it to behave:
 Suggest a few example questions in Studio so people know what to type. The setup-check
 assistant that came with the starter isn&#39;t needed any more.
 </code></pre>
-<h2>What should change</h2>
+<h2 id="what-should-change">What should change</h2>
 <ul>
 <li>new: a skill file under <code>before/src/mastra/skills/</code></li>
 <li>new: an agent file under <code>before/src/mastra/agents/</code></li>
 <li>deleted: <code>before/src/mastra/agents/setup-check-agent.ts</code></li>
 <li>edited: <code>before/src/mastra/index.ts</code></li>
 </ul>
-<h2>Read the diff</h2>
+<h2 id="read-the-diff">Read the diff</h2>
 <ol>
 <li><strong>The tools are spread in, not listed by hand.</strong> You want
 <code>...(await expenseMcpClient.listTools())</code>. If Cursor hard-coded seven tool names, the
@@ -118,10 +118,10 @@ agent through MCP, and it is what other agents would read to decide to delegate 
 <li><strong>The skill&#39;s <code>description</code> reads as a trigger condition.</strong> The agent uses it to decide
 whether to load the skill, so it should describe <em>when</em>, not <em>what</em>.</li>
 </ol>
-<h2>Check in Studio</h2>
+<h2 id="check-in-studio">Check in Studio</h2>
 <p>Restart the dev server, open <strong>Agents → Expense Assistant</strong>, and work through these. The
 point is not the prose in the answer, it is the tool calls underneath. Expand the trace
-for each one. (<a href="studio-walkthrough.md#stage-04--the-agent-decides">Screenshots</a>.)</p>
+for each one. (<a href="studio-walkthrough.html#stage-04--the-agent-decides">Screenshots</a>.)</p>
 <p><strong>1. <code>What is the daily meal limit while travelling?</code></strong></p>
 <p>Expect a call to <code>policy_searchExpensePolicy</code>, and an answer of $75/day broken into
 $25 per meal, <strong>with <code>[Meals &amp; Entertainment Policy]</code> cited</strong>. No citation means the skill
@@ -143,7 +143,7 @@ what the workflow in stage 05 is for.</p>
 <p><strong>4. <code>Show me every expense emp-002 has submitted.</code></strong></p>
 <p>Expect a single <code>expenseTool_listExpenses</code> call and no policy search. An agent that
 searches policy here is over-thinking; tighten the instructions.</p>
-<h2>If it went wrong</h2>
+<h2 id="if-it-went-wrong">If it went wrong</h2>
 <p><strong>No citations.</strong> Either the skill is not in the agent&#39;s <code>skills</code> array, or its
 description does not sound relevant to the question. Make the description explicitly
 mention policy, limits, and approval rules.</p>
@@ -155,7 +155,7 @@ instructions are how you control an agent&#39;s failure modes.</p>
 <p><strong>Tool calls fail with a schema error.</strong> Check that MCP tools return an object rather than
 a bare array. MCP requires structured results to be a record. This only bites if you
 edited a server, which you were told not to do.</p>
-<h2>Checkpoint</h2>
+<h2 id="checkpoint">Checkpoint</h2>
 <p>You have an agent that chooses its own path through four capabilities and cites its
 sources. Now the opposite problem: what if you need the path to be fixed?</p>
 <p>Next: <a href="05-approval-workflow.html">05 — Approval workflow</a></p>
