@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>00 — Setup</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #5c5c5c;
+    --rule: #e0ddd7;
+    --accent: #b45309;
+    --code-bg: #f6f5f2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    max-width: 780px;
+    padding: 48px 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { line-height: 1.25; }
+  h1 { border-bottom: 2px solid var(--rule); padding-bottom: 8px; }
+  h2 { margin-top: 2.2em; border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.92em; }
+  pre { background: var(--code-bg); padding: 14px 16px; border-radius: 6px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--rule); padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); }
+  img { max-width: 100%; border: 1px solid var(--rule); border-radius: 6px; }
+  blockquote { border-left: 3px solid var(--accent); margin: 1em 0; padding: 0.2em 1em; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>00 — Setup</h1>
+<p><strong>Do this before the workshop starts.</strong> It takes about 10 minutes, most of it waiting for
+<code>npm install</code>. Doing it live will cost you a third of the session.</p>
+<h2>What you need</h2>
+<ul>
+<li><strong>Node 22.13 or newer.</strong> Check with <code>node --version</code>. If it is older, install a newer
+one (<code>nvm install 22</code> if you use nvm; the repo has a <code>.nvmrc</code>).</li>
+<li><strong>Cursor</strong>, signed in and able to run the agent.</li>
+<li><strong>API keys</strong>, provided by the facilitator: an Anthropic key for the chat model and an
+OpenAI key for the policy search index. If your company routes AI traffic through a
+gateway, you also need the two base URLs.</li>
+</ul>
+<h2>Steps</h2>
+<p><strong>1. Clone and run setup</strong></p>
+<pre><code class="language-bash">git clone &lt;repo-url&gt;
+cd ABSL-AGENT-EXAMPLE
+npm run setup
+</code></pre>
+<p>That checks your Node version, creates a <code>.env</code> in each project, installs dependencies
+for both projects, and builds the mock SQLite databases. It is safe to re-run at any time.</p>
+<p>It will finish by telling you that your API keys are missing. That is expected.</p>
+<p><strong>2. Add your keys</strong></p>
+<p>Open <code>before/.env</code> and fill in the values the facilitator gave you:</p>
+<pre><code class="language-bash">ANTHROPIC_API_KEY=...
+ANTHROPIC_BASE_URL=      # only if you use a gateway
+OPENAI_API_KEY=...
+OPENAI_BASE_URL=         # only if you use a gateway
+</code></pre>
+<p>Copy the same values into <code>after/.env</code>.</p>
+<blockquote>
+<p><strong>Gateway users:</strong> <code>ANTHROPIC_BASE_URL</code> almost always has to end in <code>/v1</code>. A URL without
+it produces a confusing <code>403 Forbidden</code> or <code>404 not allowed</code>. <code>npm run verify</code> checks this.</p>
+</blockquote>
+<p><strong>3. Re-run setup, then verify</strong></p>
+<pre><code class="language-bash">npm run setup    # now builds the policy search index
+npm run verify
+</code></pre>
+<p>You want nine <code>PASS</code> lines:</p>
+<pre><code>PASS  Node 22.13+                     found v22.13.0
+PASS  .env present                    .../before/.env
+PASS  ANTHROPIC_API_KEY set           set (chat model)
+PASS  OPENAI_API_KEY set              set (policy embeddings)
+PASS  ANTHROPIC_BASE_URL ends in /v1  ok
+PASS  employees.db seeded             100 employees
+PASS  expenses.db seeded              150 claims
+PASS  policy index built              23 embedded chunks
+PASS  MCP services respond            7 tools across 3 services
+
+All checks passed.
+</code></pre>
+<p>Any <code>FAIL</code> line names the problem. <a href="troubleshooting.html">Troubleshooting</a> covers the
+common ones.</p>
+<p><strong>4. Open Studio and confirm the model works</strong></p>
+<pre><code class="language-bash">npm run dev
+</code></pre>
+<p>Open <a href="http://localhost:4111">http://localhost:4111</a>. Go to <strong>Agents → Setup Check</strong> and send it a message. A
+reply means your key, your base URL, and your model all work.</p>
+<p><code>Setup Check</code> is a throwaway agent with no tools. You will delete it later.</p>
+<p><strong>5. Open the repo in Cursor</strong></p>
+<p>Open the repo root (not <code>before/</code> on its own) so Cursor can see the docs, both projects,
+and the <code>mastra</code> skill.</p>
+<h2>You are ready when</h2>
+<ul>
+<li><code>npm run verify</code> is all green</li>
+<li>Studio loads at <a href="http://localhost:4111">http://localhost:4111</a> and Setup Check replies</li>
+<li>Cursor is open on the repo root</li>
+</ul>
+<p>Next: <a href="01-explore-the-kit.html">01 — Explore the kit</a></p>
+
+</body>
+</html>

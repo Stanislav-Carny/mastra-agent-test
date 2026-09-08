@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 — Explore the kit</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #5c5c5c;
+    --rule: #e0ddd7;
+    --accent: #b45309;
+    --code-bg: #f6f5f2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    max-width: 780px;
+    padding: 48px 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { line-height: 1.25; }
+  h1 { border-bottom: 2px solid var(--rule); padding-bottom: 8px; }
+  h2 { margin-top: 2.2em; border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.92em; }
+  pre { background: var(--code-bg); padding: 14px 16px; border-radius: 6px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--rule); padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); }
+  img { max-width: 100%; border: 1px solid var(--rule); border-radius: 6px; }
+  blockquote { border-left: 3px solid var(--accent); margin: 1em 0; padding: 0.2em 1em; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>01 — Explore the kit</h1>
+<p><strong>Time: 15 minutes. You write no code in this stage.</strong></p>
+<h2>Goal</h2>
+<p>Understand what already exists, so that when you start prompting you know what you are
+connecting to. Skipping this is the most common reason people get lost in stage 03.</p>
+<h2>The mental model</h2>
+<p>You have been dropped into a company that already has three systems. Another team owns
+them. You cannot change them. Your job is to build an assistant on top.</p>
+<p>Each system runs as its <strong>own process</strong> and speaks <strong>MCP</strong> over stdin/stdout. That is the
+whole point of MCP: the capability lives somewhere else, and your agent reaches it over a
+protocol rather than by importing a function.</p>
+<pre><code>your Mastra app
+      │
+      │  MCP (stdio)
+      ├──────────────►  employee-server.ts     ──►  employees.db
+      ├──────────────►  expense-policy-server.ts ─►  expense-policy.db  (vector index)
+      └──────────────►  expense-tool-server.ts  ──►  expenses.db
+</code></pre>
+<h2>Look around in Studio</h2>
+<p>Start it if it is not running:</p>
+<pre><code class="language-bash">cd before
+npm run dev
+</code></pre>
+<p>Open <a href="http://localhost:4111">http://localhost:4111</a>. The first thing to notice is how <strong>empty</strong> it is: one agent
+called <strong>Setup Check</strong>, and nothing under Tools, Workflows, or MCP Servers.
+(<a href="studio-walkthrough.md#stage-01--the-empty-starting-point">Screenshot</a>.)</p>
+<p>That is not a bug, and it is the most useful thing Studio will teach you today. Studio
+shows exactly what is registered in <code>src/mastra/index.ts</code> and nothing else. The three
+services exist on disk, in <code>src/mcp-servers/</code>, but no code has connected to them yet, so
+Studio has no idea they are there. Your job over the next hour is to fill this sidebar.</p>
+<p>If you skipped it during setup, say hello to <strong>Setup Check</strong> now. It has no tools and
+knows nothing about expenses; it exists only to prove your model credentials work.</p>
+<h2>Confirm the three services are alive</h2>
+<p>You cannot click on them yet, so check them from the terminal instead:</p>
+<pre><code class="language-bash">npm run verify
+</code></pre>
+<p>The line that matters:</p>
+<pre><code>PASS  MCP services respond  7 tools across 3 services
+</code></pre>
+<p>That started all three services as subprocesses, asked each one for its tool list, and
+counted: 2 from the employee directory, 1 from the policy knowledge base, and 4 from the
+expense submission service. They work. You just have no way to reach them from your app,
+which is stage 03&#39;s job — and that is where you will call one by hand in Studio.</p>
+<h2>Look around in the code</h2>
+<p>Ask Cursor rather than reading everything yourself:</p>
+<pre><code>Give me a tour of the before/ project. What is already built, what is missing,
+and which files am I expected to create? Do not write any code yet.
+</code></pre>
+<p>The parts worth knowing:</p>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>src/mcp-servers/</code></td>
+<td>The three services. Each one creates tools and calls <code>startStdio()</code></td>
+</tr>
+<tr>
+<td><code>src/mock-data/</code></td>
+<td>Seed fixtures and the policy documents, as plain data</td>
+</tr>
+<tr>
+<td><code>src/db/</code></td>
+<td>Schema, seeding, and the policy vector index</td>
+</tr>
+<tr>
+<td><code>src/scripts/</code></td>
+<td>The <code>db:setup</code>, <code>db:reset</code>, and <code>verify</code> commands</td>
+</tr>
+<tr>
+<td><code>src/mastra/index.ts</code></td>
+<td><strong>The registry.</strong> Nothing shows up in Studio unless it is listed here</td>
+</tr>
+</tbody></table>
+<p>Open <a href="../before/src/mastra/index.ts">`src/mastra/index.ts`</a> and read the comment block.
+It lists the four things you are about to add. That file is your checklist.</p>
+<p>Also open <a href="../before/src/mock-data/expense-policy-docs.ts">`src/mock-data/expense-policy-docs.ts`</a>
+and skim the policies. Knowing that meals are capped and that equipment needs extra
+approval will help you tell a good agent answer from a plausible-sounding wrong one.</p>
+<h2>The one rule to remember</h2>
+<p><strong>The expense MCP service is the only thing that writes to <code>expenses.db</code>.</strong></p>
+<p>When you get to the workflow in stage 05, it will be tempting to let it open the database
+directly, and Cursor may well suggest that. Do not. Two write paths to the same data is
+how real systems rot. Everything goes through the service that owns it.</p>
+<h2>Check yourself</h2>
+<p>Answer these before moving on:</p>
+<ol>
+<li>If you wanted the agent to look up an employee, would you write a tool or use MCP?
+<em>(MCP: the directory already exists as a service.)</em></li>
+<li>Where does an approval threshold like &quot;over $500 needs finance&quot; belong: policy search
+or code? <em>(Code. It is arithmetic; it must be deterministic and always the same.)</em></li>
+<li>You add a new agent but it does not appear in Studio. What did you forget?
+<em>(To register it in <code>src/mastra/index.ts</code>.)</em></li>
+</ol>
+<p>Next: <a href="02-build-the-tool.html">02 — Build the tool</a></p>
+
+</body>
+</html>

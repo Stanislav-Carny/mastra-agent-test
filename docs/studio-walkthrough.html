@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio walkthrough</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #5c5c5c;
+    --rule: #e0ddd7;
+    --accent: #b45309;
+    --code-bg: #f6f5f2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    max-width: 780px;
+    padding: 48px 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { line-height: 1.25; }
+  h1 { border-bottom: 2px solid var(--rule); padding-bottom: 8px; }
+  h2 { margin-top: 2.2em; border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.92em; }
+  pre { background: var(--code-bg); padding: 14px 16px; border-radius: 6px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--rule); padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); }
+  img { max-width: 100%; border: 1px solid var(--rule); border-radius: 6px; }
+  blockquote { border-left: 3px solid var(--accent); margin: 1em 0; padding: 0.2em 1em; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>Studio walkthrough</h1>
+<p>Every checkpoint in the workshop, as a picture. Use this when you want to know what
+&quot;working&quot; is supposed to look like before you go hunting for a bug, or when you are
+facilitating and want the demo laid out in order.</p>
+<p>This is a companion to stages <a href="01-explore-the-kit.html">01</a> to
+<a href="05-approval-workflow.html">05</a>, plus the <a href="06-validate-and-extend.html">stage 06</a> extension
+that puts the workflow in the agent&#39;s hands. It is not a replacement: the stages tell you
+what to build; this tells you what you should see afterwards.</p>
+<!-- pdf:skip -->
+<p>There is a printable version at
+<a href="mastra-studio-walkthrough.pdf">`mastra-studio-walkthrough.pdf`</a> if you would rather have
+it beside the keyboard than in another tab.</p>
+<!-- /pdf:skip --><p><strong>Two things to know about the screenshots.</strong> The stage 01 images come from <code>before/</code>, so
+they show the real starting point. Everything from stage 02 onwards comes from the
+finished <code>after/</code> project, because that is the only place all the pieces exist at once —
+so its sidebar is fuller than yours will be at that moment. Judge the panel you are
+working in, not the item count next to it.</p>
+<hr>
+<h2>Getting it running</h2>
+<p>Assuming <a href="00-setup.html">setup</a> is done and your API keys are in place, three commands get
+you to the first screenshot.</p>
+<p><strong>1. Check the environment.</strong> From the repository root:</p>
+<pre><code class="language-bash">npm run verify
+</code></pre>
+<p>Nine <code>PASS</code> lines, ending in <code>All checks passed</code>. The one that matters most here is
+<code>MCP services respond  7 tools across 3 services</code>: it starts all three mock services,
+asks each for its tool list, and shuts them down again. If this fails, fix it before
+opening Studio — every stage below depends on those services answering.</p>
+<p>You do not strictly have to run this. Each mock service creates and seeds its own database
+when it starts, and the policy service builds its vector index if it is missing, so a
+dev server can come up from nothing. Running <code>verify</code> first is still the better habit:
+it tells you <em>which</em> piece is broken, where a failure at boot just makes Studio look empty.</p>
+<p><strong>2. Start Studio</strong> on the project you are building in:</p>
+<pre><code class="language-bash">npm run dev            # the before/ project, where you work
+npm run dev:after      # the finished reference, for comparison
+</code></pre>
+<p><strong>3. Open the URL from the startup banner</strong>, not the one you remember:</p>
+<pre><code>│ Studio: http://localhost:4111
+</code></pre>
+<p>Port 4111 is the default, but if something already has it, Mastra takes the next free port
+and prints that instead. Running <code>before/</code> and <code>after/</code> side by side is fine and normal —
+the second one just lands on 4112.</p>
+<p>Leave the server running. Each stage below tells you when to restart it, which you need
+after adding anything new to <code>src/mastra/index.ts</code>, since a new top-level key does not
+always hot-reload.</p>
+<hr>
+<h2>Stage 01 — The empty starting point</h2>
+<p><strong>Do this:</strong> <code>cd before &amp;&amp; npm run dev</code>, then open the URL from the startup banner (4111
+unless something else already has it).</p>
+<p><img src="images/01-empty-studio.png" alt="Mastra Studio on the before project, showing only the Setup Check agent"></p>
+<p><strong>Look for:</strong> one agent, <code>Setup Check</code>, and dashes in the Workflows, Agents, and Tools
+columns. That is not a broken install. Studio renders exactly what
+<code>src/mastra/index.ts</code> registers, and right now that file registers one throwaway agent.</p>
+<p>Click <strong>MCP Servers</strong> in the sidebar and you get the same message in stronger terms:</p>
+<p><img src="images/01-mcp-servers-empty.png" alt="The MCP Servers page in before, reading No MCP Servers yet"></p>
+<p>The three services exist on disk in <code>src/mcp-servers/</code>, and <code>npm run verify</code> will confirm
+all seven of their tools answer. Studio still cannot see them, because nothing in your
+code has connected to them yet. Filling this sidebar is the whole workshop.</p>
+<p><strong>Prove your credentials work</strong> before building anything on top of them. Open
+<strong>Agents → Setup Check</strong> and say hello:</p>
+<p><img src="images/01-setup-check-reply.png" alt="The Setup Check agent replying that setup is working"></p>
+<p>A reply means your API key, base URL, and model id are all good. The &quot;Memory not enabled&quot;
+notice on the left is expected: this agent has no memory, so nothing is saved as a thread.</p>
+<hr>
+<h2>Stage 02 — Your first tool</h2>
+<p><strong>Do this:</strong> build the approval-route tool, register it, restart the dev server, and open
+<strong>Tools</strong>.</p>
+<p><img src="images/02-tools-list.png" alt="The Tools list in Studio"></p>
+<p><strong>Look for:</strong> your tool listed under its <code>id</code>, <code>calculateApprovalRoute</code>, with the
+description you wrote next to it. At this point in the workshop it will be the only row;
+the <code>employee_</code>, <code>policy_</code>, and <code>expenseTool_</code> entries above arrive in stage 03.</p>
+<p>That description column is worth a second of attention. It is not documentation for you —
+it is what the model reads when deciding whether to call your tool. A vague description is
+how a perfectly correct tool ends up never being used.</p>
+<p><strong>Then run it.</strong> Click the tool, enter <code>50</code>, and press Submit:</p>
+<p><img src="images/02-tool-result.png" alt="The calculateApprovalRoute tool returning manager approval for an amount of 50"></p>
+<p><strong>Look for:</strong> <code>approvers: [&quot;manager&quot;]</code>, <code>autoApproved: false</code>, <code>receiptRequired: true</code>.</p>
+<p>Fifty is the interesting number. It is exactly on the boundary, so a tool written with
+<code>&gt; 50</code> instead of <code>&gt;= 50</code> auto-approves it and looks fine on every other input you try.
+Test <code>20</code>, <code>50</code>, <code>500</code>, and <code>640</code>: they should give you no approvers, manager, manager,
+and manager plus finance.</p>
+<hr>
+<h2>Stage 03 — The three services</h2>
+<p><strong>Do this:</strong> build the MCP client, register the proxies, restart, and open <strong>MCP Servers</strong>.</p>
+<p><img src="images/03-mcp-servers.png" alt="The MCP Servers page listing employee, policy and expenseTool"></p>
+<p><strong>Look for:</strong> three rows named <code>employee</code>, <code>policy</code>, and <code>expenseTool</code> — the keys you gave
+them in your client — with tool counts of 2, 1, and 4. Seven tools across three services
+is the same number <code>npm run verify</code> reports, so if the terminal and the browser disagree,
+trust neither and restart the dev server.</p>
+<p><strong>Then call one by hand.</strong> Click <strong>expenseTool → listExpenses</strong> and pass <code>emp-002</code>:</p>
+<p><img src="images/03-mcp-tool-result.png" alt="The listExpenses MCP tool returning two historical claims for emp-002"></p>
+<p><strong>Look for:</strong> two historical claims, one <code>pending_approval</code> and one <code>approved</code>. You just
+ran code in a different process, over a protocol, with no agent involved anywhere. That
+separation is the entire point of MCP.</p>
+<p>Notice the shape of the result: <code>{ result: { expenses: [...] } }</code>. MCP requires structured
+output to be an object, so the array is wrapped in one. A tool that returns a bare array
+fails with <code>expected record, received array</code>.</p>
+<hr>
+<h2>Stage 04 — The agent decides</h2>
+<p><strong>Do this:</strong> build the citation skill and the agent, restart, and open
+<strong>Agents → Expense Assistant</strong>. Ask a policy question first:</p>
+<p><img src="images/04-agent-citation.png" alt="The agent answering a policy question with a citation"></p>
+<p><strong>Look for</strong> three things, in this order of importance:</p>
+<ol>
+<li><strong>The citation.</strong> <code>[Meals &amp; Entertainment Policy]</code> after the claim. No citation means
+the skill is not loading — check that its description sounds relevant to the question.</li>
+<li><strong>The <code>Skill expense-policy-citations</code> chip</strong> above the answer. That is the agent
+deciding to load the skill. It is not always shown, and its absence is not a failure by
+itself, but the citation is.</li>
+<li><strong><code>Policy searchExpensePolicy</code>.</strong> It looked the answer up rather than recalling it.</li>
+</ol>
+<p>Then ask the question that shows what an agent actually is:</p>
+<p><img src="images/04-agent-tool-calls.png" alt="The agent calling the employee directory, policy search and approval tool for a 640 dollar claim"></p>
+<p><strong>Look for:</strong> a chain of calls it chose on its own — the employee directory, your local
+<code>CalculateApprovalRoute</code>, and a policy search — and an answer that combines all three,
+with citations on each policy claim.</p>
+<p>You never told it that order. You gave it capabilities and a goal, and it picked the
+sequence. Ask a neighbour to compare their trace with yours; they will differ, and that
+difference is the clearest definition of &quot;agent&quot; anyone will give you today.</p>
+<p>Worth noticing in this answer: the $500 finance threshold came from your <strong>tool</strong>, while
+the &quot;equipment over $200 needs IT approval&quot; rule came from <strong>policy search</strong>. Deterministic
+arithmetic and prose knowledge, arriving through different doors, merged into one answer.</p>
+<hr>
+<h2>Stage 05 — The workflow pauses</h2>
+<p><strong>Do this:</strong> build the workflow, restart, open <strong>Workflows → expense-workflow</strong>, and run it
+with <code>emp-002</code> and <code>Team dinner with 4 people in Chicago, $180 total</code>.</p>
+<p><img src="images/05-workflow-suspended.png" alt="A suspended workflow run waiting at the human-approval step"></p>
+<p><strong>Look for:</strong> the run marked <strong>Suspended</strong>, the first three steps green, and
+<code>human-approval</code> highlighted with a <strong>Step suspended / Needs input</strong> panel on the right.
+The timeline at the bottom shows where the time went: <code>draft-claim</code> takes seconds because
+it calls the agent, while <code>route-for-approval</code> and <code>submit-claim</code> are near-instant because
+they are ordinary code.</p>
+<p>Check the drafted claim before you resume. The agent will usually have flagged the
+$30/person cap on internal team meals, and some runs draft the amount as the $150 that is
+actually reimbursable rather than the $180 charged. Nobody told it to do that.</p>
+<p><strong>Now the part that matters.</strong> Stop the dev server and start it again, then reopen the run
+from <strong>Recent runs</strong>. It is still suspended, exactly where it was. The snapshot lives in
+storage, not in your browser or in a chat session, which is the reason workflows exist.</p>
+<p><strong>Then resume it.</strong> Tick the approve box, add a note, and press Resume:</p>
+<p><img src="images/05-workflow-resumed.png" alt="A completed workflow run with all four steps successful"></p>
+<p><strong>Look for:</strong> status <strong>Success</strong> and all four steps green through to <code>End</code>. Confirm the
+decision was actually recorded by calling <strong>MCP Servers → expenseTool → getExpenseStatus</strong>
+with the <code>expenseId</code> from the result: the status should now be <code>approved</code>.</p>
+<p>That last check is the one worth doing properly. The workflow did not write to
+<code>expenses.db</code> itself; it asked the service that owns that data to record the decision.
+A version that opens the database directly produces an identical screenshot and is still
+wrong.</p>
+<hr>
+<h2>Stage 06 — A receipt starts the whole thing</h2>
+<p><em>This is the <a href="06-validate-and-extend.md#extensions">stage 06 extension</a>, not part of the
+main build. Not everyone will get here in the time, so treat it as the demo rather than a
+checkpoint you have to hit.</em></p>
+<p>Up to now the agent and the workflow have lived in separate tabs: you ran the workflow
+yourself, from a form. The extension gives the agent the workflow as one of its tools, and
+that changes who starts the process.</p>
+<p><strong>Do this:</strong> in the Expense Assistant chat, use <strong>Add attachment → Add a local file</strong>,
+attach <a href="assets/sample-receipt.png">`assets/sample-receipt.png`</a>, and send <em>&quot;here&#39;s my
+receipt for a team dinner. Please submit it for emp-002.&quot;</em></p>
+<p><img src="images/06-receipt-in-chat.png" alt="The agent reading an attached receipt, calling three tools, then starting the workflow"></p>
+<p><strong>Look for</strong> four separate things in that one reply:</p>
+<ul>
+<li><strong>The receipt was read.</strong> Nobody typed <code>$180.00</code>, a vendor or a guest count. The chat
+model handles images, so the picture is the input.</li>
+<li><strong>The tools it chose</strong>, unprompted: <code>getEmployee</code>, <code>searchExpensePolicy</code>,
+<code>calculateApprovalRoute</code> — and the <code>expense-policy-citations</code> skill firing underneath.</li>
+<li><strong>The policy arithmetic.</strong> It works out that a $30/person cap over 4 guests is $120, so
+$180 is $60 over, and says a human approver will make the final call.</li>
+<li><strong>It submits anyway.</strong> That last part is deliberate, and it is the interesting design
+decision in this whole workshop. An agent that refuses to submit an over-cap claim feels
+responsible, but it has quietly taken over the decision the <code>human-approval</code> step exists
+to make. The reference agent is told to submit it and record the breach, because the
+approver decides. Yours will probably stop and ask until you tell it otherwise.</li>
+</ul>
+<p>Then it calls the workflow, and Studio draws the run inline in the conversation. Scroll
+down and you can watch the same four steps you ran from a form in stage 05:</p>
+<p><img src="images/06-chat-workflow-suspended.png" alt="The expense workflow drawn inside the chat, paused at the human-approval step"></p>
+<p><strong>Look for:</strong> the graph rendered inside the message, and <code>human-approval</code> marked as
+waiting with the run stopped there. The chat is now suspended too — the pause travelled
+all the way out to whoever was talking to the agent. Resume it from <strong>Workflows → Recent
+runs</strong>, exactly as in stage 05, and the claim completes.</p>
+<p>That is the version worth showing someone sceptical about all of this: a photo of a
+receipt goes in, a routed and policy-checked claim comes out, and it still stops for a
+human before anything is approved.</p>
+<hr>
+<h2>Re-capturing these images</h2>
+<p><em>Maintainers only. This section is left out of the printable handout.</em></p>
+<p>Studio is a live application, so these go stale when the UI or the reference solution
+changes. They are generated, not hand-made — do not edit them.</p>
+<p>Start both dev servers, note the port each one printed, then:</p>
+<pre><code class="language-bash">npx playwright install chromium        # once per machine
+npm run docs:screenshots -- --before http://localhost:4111 --after http://localhost:4112
+</code></pre>
+<p>Pass step names to redo just part of it, for example
+<code>npm run docs:screenshots -- 05-workflow</code>. The stage 05 and 06 steps each capture both of
+their images from a single run, so the pair always shows the same claim.</p>
+<p>The stage 06 step needs the receipt image on disk; <code>npm run docs:receipt</code> regenerates it.
+Because it is a real conversation, the agent&#39;s wording changes between captures — check
+the new screenshot still shows the flag and the submission before you commit it, since
+that is what the surrounding text promises.</p>
+<p>The agent and workflow steps make real model calls, so a full capture takes a couple of
+minutes and costs a few cents.</p>
+<p>Then rebuild the handout, which reads this file and the images off disk and needs no dev
+server:</p>
+<pre><code class="language-bash">npm run docs:pdf
+</code></pre>
+
+</body>
+</html>

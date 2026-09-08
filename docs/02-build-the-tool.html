@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 — Build the tool</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #5c5c5c;
+    --rule: #e0ddd7;
+    --accent: #b45309;
+    --code-bg: #f6f5f2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    max-width: 780px;
+    padding: 48px 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { line-height: 1.25; }
+  h1 { border-bottom: 2px solid var(--rule); padding-bottom: 8px; }
+  h2 { margin-top: 2.2em; border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.92em; }
+  pre { background: var(--code-bg); padding: 14px 16px; border-radius: 6px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--rule); padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); }
+  img { max-width: 100%; border: 1px solid var(--rule); border-radius: 6px; }
+  blockquote { border-left: 3px solid var(--accent); margin: 1em 0; padding: 0.2em 1em; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>02 — Build the tool</h1>
+<p><strong>Time: 15 minutes. Concept: Tool.</strong></p>
+<h2>Goal</h2>
+<p>Write one deterministic function the agent can call, and register it. This is the
+smallest possible unit of agent capability, and the easiest to get right, so we start here.</p>
+<h2>Why this belongs in code</h2>
+<p>The submission policy says:</p>
+<blockquote>
+<p>Claims are auto-approved under $50; claims between $50 and $500 require manager
+approval; claims over $500 require both manager and finance approval. Every claim
+requires an itemized receipt for amounts over $25.</p>
+</blockquote>
+<p>You could let the model read that passage and work out the answer. Don&#39;t. Models are
+inconsistent at boundary arithmetic, and &quot;is $500 over $500?&quot; is exactly the kind of
+question where a plausible wrong answer costs someone money.</p>
+<p>The rule of thumb: <strong>if the answer must be identical every time, it belongs in a tool.</strong>
+Retrieval for the prose, code for the arithmetic.</p>
+<h2>Prompt</h2>
+<p>Paste this into Cursor, with <code>before/</code> open:</p>
+<pre><code>I need the expense assistant to work out who has to approve a claim. It has to give
+the same answer every single time, so this should be real code, not something the
+model reasons about in the moment. Call it calculateApprovalRoute.
+
+The rules, from our Expense Submission &amp; Approval Policy:
+- under $50 is auto-approved and needs nobody&#39;s sign-off
+- $50 up to $500 needs the employee&#39;s manager
+- over $500 needs the manager and finance
+- an itemised receipt is required for anything over $25
+
+Give it an amount and a currency, defaulting to US dollars. It should come back with
+who needs to approve, whether it was auto-approved, whether a receipt is required, and
+a one-line summary I could show to an employee as-is.
+
+Finance revisits these thresholds every year, so keep the numbers somewhere obvious
+rather than scattered through the logic. I want to try this out in Mastra Studio on its
+own, and later a fixed approval process will need to reuse the same calculation without
+going through the assistant.
+</code></pre>
+<p>Notice what that prompt does <em>not</em> say: no file paths, no function signatures, no
+mention of Mastra&#39;s API. <a href="../before/AGENTS.html">`before/AGENTS.md`</a> already tells Cursor
+where things live and to load the <code>mastra</code> skill before writing any Mastra code. Describe
+the outcome and the rules; let the tooling handle the conventions.</p>
+<h2>What should change</h2>
+<p>Cursor chooses the file names, so yours may read slightly differently. The shape is what
+matters:</p>
+<ul>
+<li>new: a tool file under <code>before/src/mastra/tools/</code></li>
+<li>edited: <code>before/src/mastra/index.ts</code> — a <code>tools:</code> entry, which is what makes it show up
+in Studio</li>
+</ul>
+<p>If Cursor edited anything in <code>src/db/</code>, <code>src/mcp-servers/</code>, or <code>src/mock-data/</code>, tell it
+to revert that. Those are off limits.</p>
+<h2>Read the diff</h2>
+<p>Four things to check, in order of how often they go wrong:</p>
+<ol>
+<li><strong>The boundaries.</strong> $50 exactly should require a manager, not auto-approve. $500
+exactly should be manager-only, not finance. <code>&gt;=</code> versus <code>&gt;</code> is the whole game here.</li>
+<li><strong><code>description</code>.</strong> The agent chooses tools by reading descriptions. A vague one means
+the tool never gets called. It should say what the tool does <em>and</em> hint when to use it.</li>
+<li><strong><code>inputSchema</code> field descriptions.</strong> <code>.describe(...)</code> on each field is what the model
+sees when filling in arguments.</li>
+<li><strong>The plain function is exported.</strong> You need it in stage 05.</li>
+</ol>
+<h2>Check in Studio</h2>
+<p>Restart <code>npm run dev</code> if it is running, then go to <strong>Tools</strong> in the sidebar. Your tool
+should be listed as <code>calculateApprovalRoute</code>
+(<a href="studio-walkthrough.md#stage-02--your-first-tool">screenshot</a>). Run it three times:</p>
+<table>
+<thead>
+<tr>
+<th>Amount</th>
+<th>Expect</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>20</code></td>
+<td><code>autoApproved: true</code>, <code>receiptRequired: false</code>, no approvers</td>
+</tr>
+<tr>
+<td><code>50</code></td>
+<td><code>approvers: [&quot;manager&quot;]</code>, <code>receiptRequired: true</code></td>
+</tr>
+<tr>
+<td><code>640</code></td>
+<td><code>approvers: [&quot;manager&quot;, &quot;finance&quot;]</code>, <code>receiptRequired: true</code></td>
+</tr>
+</tbody></table>
+<p>The middle row is the one that catches off-by-one errors.</p>
+<h2>If it went wrong</h2>
+<p><strong>The tool is not in Studio.</strong> It is not registered. Open <code>src/mastra/index.ts</code> and check
+for a <code>tools:</code> entry. Restart the dev server; adding a new top-level key does not always
+hot-reload.</p>
+<p><strong>$50 auto-approves.</strong> The comparison is <code>&gt; 50</code> where it should be <code>&gt;= 50</code>. Tell Cursor:
+&quot;a claim of exactly $50 must require manager approval, fix the boundary&quot;.</p>
+<p><strong>Cursor wrote the thresholds inline instead of as constants.</strong> Minor, but ask it to
+extract them. You want the numbers in one obvious place when someone asks &quot;where does
+$500 come from?&quot;.</p>
+<h2>Checkpoint</h2>
+<p>You have a working tool that gives the same answer every time, and you have seen it run
+in Studio without any agent involved. That separation matters: tools are testable on
+their own.</p>
+<p>Next: <a href="03-connect-mcp.html">03 — Connect MCP</a></p>
+
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 — Agent and skill</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #5c5c5c;
+    --rule: #e0ddd7;
+    --accent: #b45309;
+    --code-bg: #f6f5f2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    max-width: 780px;
+    padding: 48px 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { line-height: 1.25; }
+  h1 { border-bottom: 2px solid var(--rule); padding-bottom: 8px; }
+  h2 { margin-top: 2.2em; border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.92em; }
+  pre { background: var(--code-bg); padding: 14px 16px; border-radius: 6px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--rule); padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); }
+  img { max-width: 100%; border: 1px solid var(--rule); border-radius: 6px; }
+  blockquote { border-left: 3px solid var(--accent); margin: 1em 0; padding: 0.2em 1em; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>04 — Agent and skill</h1>
+<p><strong>Time: 25 minutes. Concepts: Agent, Skill.</strong></p>
+<p>This is the centre of the workshop. Take the time.</p>
+<h2>Goal</h2>
+<p>Build an agent that decides for itself which of your eight tools to use, and give it a
+skill that makes its policy answers trustworthy.</p>
+<h2>What makes this an agent</h2>
+<p>Up to now you have written capabilities. Nothing has <em>decided</em> anything. An agent is the
+piece that does: an LLM, a set of instructions, and a set of tools, in a loop. You give it
+a question; it picks a tool, reads the result, picks another, and eventually answers.</p>
+<p>You do not tell it the order. That is the trade: you gain flexibility and lose
+predictability. Stage 05 is about getting predictability back where you need it.</p>
+<h2>What a skill is for</h2>
+<p>Your agent needs a rule: <em>never state a policy limit without citing the document it came
+from.</em> You could put that in the instructions. For one rule that is fine. But instructions
+are sent on every single request, so as rules accumulate the prompt bloats and the
+important parts get diluted.</p>
+<p>A skill is a named block of instructions with a description. The agent reads the
+description, and loads the full instructions <strong>only when the task looks relevant</strong>.
+Policy-citation rules load for &quot;what is the meal limit?&quot; and stay out of the way for
+&quot;list my expenses&quot;.</p>
+<blockquote>
+<p>Not to be confused with the <code>mastra</code> skill in <code>.agents/skills/</code>, which teaches <em>Cursor</em>
+to write correct Mastra code. Same word, different audience: this one teaches your
+<em>agent</em> how to behave at runtime.</p>
+</blockquote>
+<h2>Prompt (part 1: the skill)</h2>
+<pre><code>When the assistant answers anything about expense policy — a limit, an approval rule, a
+receipt requirement, a deadline — the answer has to be trustworthy enough that an
+employee can act on it. So whenever a question is about policy, it must:
+
+- look the answer up in the policy knowledge base instead of answering from memory
+- name the policy document it got each answer from, in square brackets right after the
+  claim, like &quot;Hotels are capped at $250/night [Business Travel Policy]&quot;
+- cite all of them when an answer draws on more than one document
+- never state a limit, rule or threshold without saying where it came from
+- say plainly that it found nothing relevant, rather than guessing
+
+Package that up as expense-policy-citations: a named behaviour the assistant picks up
+only when a question is actually about policy, so it isn&#39;t carrying these rules around
+for every unrelated request.
+</code></pre>
+<h2>Prompt (part 2: the agent)</h2>
+<pre><code>Now build the assistant itself, so employees can chat with it in Mastra Studio. Call it
+Expense Assistant, with expense-agent as its identifier, and describe it as helping
+employees check expense policy and submit claims.
+
+It should be able to look people up in the directory, search policy, work out approval
+routes, and submit claims — so give it everything the three services offer plus the
+approval calculation I built earlier, and the citation behaviour from a moment ago.
+
+How I want it to behave:
+- check policy before submitting a claim, not after
+- when a request doesn&#39;t say which currency, take it from the employee&#39;s record rather
+  than assuming dollars
+- never work out approval thresholds in its head; always use the approval calculation
+- when it doesn&#39;t know which employee a request is for, ask instead of guessing
+
+Suggest a few example questions in Studio so people know what to type. The setup-check
+assistant that came with the starter isn&#39;t needed any more.
+</code></pre>
+<h2>What should change</h2>
+<ul>
+<li>new: a skill file under <code>before/src/mastra/skills/</code></li>
+<li>new: an agent file under <code>before/src/mastra/agents/</code></li>
+<li>deleted: <code>before/src/mastra/agents/setup-check-agent.ts</code></li>
+<li>edited: <code>before/src/mastra/index.ts</code></li>
+</ul>
+<h2>Read the diff</h2>
+<ol>
+<li><strong>The tools are spread in, not listed by hand.</strong> You want
+<code>...(await expenseMcpClient.listTools())</code>. If Cursor hard-coded seven tool names, the
+agent will silently miss any tool added to a service later.</li>
+<li><strong>The agent has a <code>description</code>.</strong> Not optional here: Mastra needs it to expose an
+agent through MCP, and it is what other agents would read to decide to delegate to it.</li>
+<li><strong>The instructions say what to do, not what to be.</strong> &quot;Always call
+<code>calculateApprovalRoute</code> instead of doing the arithmetic yourself&quot; changes behaviour.
+&quot;You are a helpful expense assistant&quot; does not.</li>
+<li><strong>The skill&#39;s <code>description</code> reads as a trigger condition.</strong> The agent uses it to decide
+whether to load the skill, so it should describe <em>when</em>, not <em>what</em>.</li>
+</ol>
+<h2>Check in Studio</h2>
+<p>Restart the dev server, open <strong>Agents → Expense Assistant</strong>, and work through these. The
+point is not the prose in the answer, it is the tool calls underneath. Expand the trace
+for each one. (<a href="studio-walkthrough.md#stage-04--the-agent-decides">Screenshots</a>.)</p>
+<p><strong>1. <code>What is the daily meal limit while travelling?</code></strong></p>
+<p>Expect a call to <code>policy_searchExpensePolicy</code>, and an answer of $75/day broken into
+$25 per meal, <strong>with <code>[Meals &amp; Entertainment Policy]</code> cited</strong>. No citation means the skill
+is not loading; check its description.</p>
+<p><strong>2. <code>Who has to approve a $640 equipment claim for emp-002?</code></strong></p>
+<p>This is the interesting one. Expect three or four calls: <code>employee_getEmployee</code>,
+<code>policy_searchExpensePolicy</code>, and <code>calculateApprovalRoute</code>. You may also see a <code>skill</code>
+call, which is the agent loading the citation skill.</p>
+<p>Read the order it chose. You never specified one. That is the agent doing its job.</p>
+<p>Good answers also flag that $640 exceeds the $500/year personal equipment cap. That comes
+from the policy search, not the tool.</p>
+<p><strong>3. <code>Submit a $40 client lunch for emp-002</code></strong></p>
+<p>Expect <code>calculateApprovalRoute</code> — which reports <code>autoApproved: true</code>, since $40 is under
+the $50 threshold — and then <code>expenseTool_submitExpense</code>. Confirm it landed:
+<strong>MCP Servers → expenseTool → <code>listExpenses</code></strong> with <code>employeeId: emp-002</code>.</p>
+<p>The new claim&#39;s status is <code>submitted</code>, not <code>approved</code>. Nothing has acted on the approval
+route yet; the agent only reported it. Turning that route into a recorded decision is
+what the workflow in stage 05 is for.</p>
+<p><strong>4. <code>Show me every expense emp-002 has submitted.</code></strong></p>
+<p>Expect a single <code>expenseTool_listExpenses</code> call and no policy search. An agent that
+searches policy here is over-thinking; tighten the instructions.</p>
+<h2>If it went wrong</h2>
+<p><strong>No citations.</strong> Either the skill is not in the agent&#39;s <code>skills</code> array, or its
+description does not sound relevant to the question. Make the description explicitly
+mention policy, limits, and approval rules.</p>
+<p><strong>The agent does the arithmetic itself.</strong> Its instructions are too soft. Make it an
+explicit prohibition: &quot;Never do approval-threshold arithmetic in your head.&quot;</p>
+<p><strong>It invents an employee id.</strong> Add &quot;ask for the employee id if you were not given one,
+rather than guessing&quot; to the instructions. Worth doing — it is a good demonstration that
+instructions are how you control an agent&#39;s failure modes.</p>
+<p><strong>Tool calls fail with a schema error.</strong> Check that MCP tools return an object rather than
+a bare array. MCP requires structured results to be a record. This only bites if you
+edited a server, which you were told not to do.</p>
+<h2>Checkpoint</h2>
+<p>You have an agent that chooses its own path through four capabilities and cites its
+sources. Now the opposite problem: what if you need the path to be fixed?</p>
+<p>Next: <a href="05-approval-workflow.html">05 — Approval workflow</a></p>
+
+</body>
+</html>

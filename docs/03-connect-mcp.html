@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 — Connect MCP</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #5c5c5c;
+    --rule: #e0ddd7;
+    --accent: #b45309;
+    --code-bg: #f6f5f2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    max-width: 780px;
+    padding: 48px 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { line-height: 1.25; }
+  h1 { border-bottom: 2px solid var(--rule); padding-bottom: 8px; }
+  h2 { margin-top: 2.2em; border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.92em; }
+  pre { background: var(--code-bg); padding: 14px 16px; border-radius: 6px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--rule); padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); }
+  img { max-width: 100%; border: 1px solid var(--rule); border-radius: 6px; }
+  blockquote { border-left: 3px solid var(--accent); margin: 1em 0; padding: 0.2em 1em; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>03 — Connect MCP</h1>
+<p><strong>Time: 15 minutes. Concept: MCP.</strong></p>
+<h2>Goal</h2>
+<p>Connect to the three mock services so their tools become available to your code, and
+surface them in Studio.</p>
+<h2>What MCP actually gives you</h2>
+<p>In stage 02 you wrote a tool and imported it. That works because the tool lives in your
+codebase. But the employee directory does not, and in a real company it never would: it
+belongs to another team, in another repo, probably in another language.</p>
+<p>MCP is the answer to &quot;how does my agent call a tool that lives somewhere else?&quot; A client
+starts (or connects to) a server, asks it <code>tools/list</code>, and gets back tool names, input
+schemas, and descriptions. From then on the agent treats them like any other tool.</p>
+<p>The useful consequence: <strong>swapping a local tool for a remote one changes nothing about
+how the agent reasons.</strong> Capability and delivery are separate concerns.</p>
+<p>Here, each service is started as a subprocess and talks over stdin/stdout. That is the
+<code>stdio</code> transport. The alternative is HTTP, for services that are already running
+somewhere.</p>
+<h2>Prompt</h2>
+<pre><code>This project already comes with three services we depend on: an employee directory, a
+policy knowledge base, and the expense submission system. Connect to all three, so the
+tools they offer are available to whatever I build next and I can see them and try them
+out by hand in Mastra Studio.
+
+List them as employee, policy and expenseTool, because the rest of my notes refer to
+them by those names.
+
+The policy service builds its search index the first time it starts, which takes a
+while, so be generous with the startup timeout.
+
+I&#39;ll also want a simple way for my own code to call the expense submission service
+later, without every caller needing to know how the connection is set up.
+</code></pre>
+<p>The awkward details this leaves out — that the services are subprocesses talking over
+stdin/stdout, and that paths must not be built from the working directory — are covered
+by <a href="../before/AGENTS.html">`before/AGENTS.md`</a> and the <code>mastra</code> skill. You describe which
+systems to connect and what you want to call them; Cursor handles the transport.</p>
+<h2>What should change</h2>
+<ul>
+<li>new: one or two files under <code>before/src/mastra/mcp/</code> — the client that connects to the
+three services, and the helper your later code will call the expense service through</li>
+<li>edited: <code>before/src/mastra/index.ts</code> — an <code>mcpServers:</code> entry</li>
+</ul>
+<h2>Read the diff</h2>
+<ol>
+<li><strong>Server keys.</strong> They must be <code>employee</code>, <code>policy</code>, and <code>expenseTool</code>. Tool names get
+namespaced as <code>&lt;serverKey&gt;_&lt;toolName&gt;</code>, so the agent will see <code>employee_getEmployee</code>.
+Later stages assume those exact names.</li>
+<li><strong>Paths come from <code>projectRoot</code>.</strong> If you see <code>process.cwd()</code> or a relative path like
+<code>./src/mcp-servers/...</code>, it will break the moment Studio runs from a different
+directory. This is the single most common failure in this stage.</li>
+<li><strong>The client is created once, at module level.</strong> Creating a second <code>MCPClient</code> with an
+identical config throws, on purpose, to catch a leak. If Cursor created one per call,
+ask it to hoist it.</li>
+<li><strong>The proxies are created once too.</strong> <code>toMCPServerProxies()</code> should be called in one
+place and shared, not called separately by <code>index.ts</code> and the workflow.</li>
+</ol>
+<h2>Check in Studio</h2>
+<p>Restart the dev server. <strong>MCP Servers</strong> in the sidebar is no longer empty: the three
+services are listed as <strong>employee</strong>, <strong>policy</strong>, and <strong>expenseTool</strong>, the same keys you
+gave them in the client. Confirm the count: <strong>7 tools</strong> total (2 employee, 1 policy,
+4 expense). (<a href="studio-walkthrough.md#stage-03--the-three-services">Screenshots</a>.)</p>
+<p>Now call some by hand. There is still no agent involved — you are the one choosing the
+tool and filling in the arguments.</p>
+<p><strong>expenseTool</strong> → <code>listExpenses</code> with <code>employeeId: emp-002</code>. Two historical claims come
+back, read out of <code>expenses.db</code> by a different process.</p>
+<p><strong>policy</strong> → <code>searchExpensePolicy</code> with <code>query: meal limits when travelling</code>. You get
+policy passages ranked by relevance, each tagged with the document it came from. Note the
+<code>title</code> field; you will use it in stage 04 to make the agent cite its sources.</p>
+<p><strong>employee</strong> → <code>getEmployee</code> with <code>idOrEmail: emp-002</code>. Grace Hopper&#39;s currency is <code>USD</code>
+and her manager is <code>emp-001</code>.</p>
+<p>You can also check the wiring from the terminal:</p>
+<pre><code class="language-bash">npm run verify
+</code></pre>
+<p><code>MCP services respond  7 tools across 3 services</code> means it is good.</p>
+<h2>If it went wrong</h2>
+<p><strong>&quot;Connection closed&quot; or a timeout on startup.</strong> Almost always a bad path. Check that
+the script paths are absolute and built from <code>projectRoot</code>. Run
+<code>npx tsx src/mcp-servers/employee-server.ts</code> directly: if it exits with an error, the
+server itself is broken, not your client.</p>
+<p><strong>The policy server times out on first run.</strong> It embeds the policy documents on first
+start, which takes a few seconds and needs <code>OPENAI_API_KEY</code>. Run <code>npm run db:setup</code> to
+build the index up front, then retry.</p>
+<p><strong>Duplicate MCPClient error.</strong> The client is being constructed more than once. It must be
+a module-level <code>export const</code>, not created inside a function.</p>
+<h2>Checkpoint</h2>
+<p>You now have local tools <em>and</em> remote tools available to the same codebase, in the same
+shape. The next stage gives an LLM the ability to choose between them.</p>
+<p>Next: <a href="04-agent-and-skill.html">04 — Agent and skill</a></p>
+
+</body>
+</html>

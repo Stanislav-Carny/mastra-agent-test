@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quickstart: from before to after</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #5c5c5c;
+    --rule: #e0ddd7;
+    --accent: #b45309;
+    --code-bg: #f6f5f2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    max-width: 780px;
+    padding: 48px 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { line-height: 1.25; }
+  h1 { border-bottom: 2px solid var(--rule); padding-bottom: 8px; }
+  h2 { margin-top: 2.2em; border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.92em; }
+  pre { background: var(--code-bg); padding: 14px 16px; border-radius: 6px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--rule); padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); }
+  img { max-width: 100%; border: 1px solid var(--rule); border-radius: 6px; }
+  blockquote { border-left: 3px solid var(--accent); margin: 1em 0; padding: 0.2em 1em; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>Quickstart: from before to after</h1>
+<p>A self-service path through the workshop. No git required. If you want the full
+guided, stage-by-stage version instead, go straight to the
+<a href="README.html">workshop start page</a>.</p>
+<h2>1. Download and unzip the repo</h2>
+<p>Go to <a href="https://github.com/Stanislav-Carny/mastra-agent-test">github.com/Stanislav-Carny/mastra-agent-test</a>,
+click <strong>Code → Download ZIP</strong>, then unzip it to your desktop.</p>
+<h2>2. Open the repo in Cursor, in the <code>before</code> folder</h2>
+<p>Open Cursor, then <strong>File → Open Folder</strong> and pick the <code>before/</code> folder inside the
+unzipped repo. That folder is your workspace — see
+<a href="https://github.com/Stanislav-Carny/mastra-agent-test/blob/main/before/README.md">`before/README.md`</a>
+for what is already in it.</p>
+<h2>3. Create your <code>.env</code> file</h2>
+<p>Copy <code>.env.example</code> to <code>.env</code> inside <code>before/</code> (and do the same inside <code>after/</code> if you
+want to compare against the finished solution later). Fill in your Anthropic API key
+(chat model) and OpenAI API key (embeddings) — see
+<a href="00-setup.html">00 Setup</a> for exactly which variables are required.</p>
+<h2>4. Check the chatbot works with your Anthropic credentials</h2>
+<pre><code class="language-bash">npm run setup     # from the repo root: installs deps, builds mock databases
+npm run verify     # from before/: should be all PASS
+npm run dev        # from before/: starts Mastra Studio at http://localhost:4111
+</code></pre>
+<p>In Studio, open <code>setupCheckAgent</code> and send it a message. A reply means your Anthropic
+key works. Delete that agent once you have your own working — it is a throwaway.</p>
+<h2>5. Review the MCP servers, tools, and skills you were given</h2>
+<p>Before building anything, look at what already exists in <code>before/</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Already there</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Employee Directory MCP server (<code>getEmployee</code>, <code>listEmployees</code>)</td>
+<td><code>src/mcp-servers/</code></td>
+</tr>
+<tr>
+<td>Policy Knowledge Base MCP server (<code>searchExpensePolicy</code>)</td>
+<td><code>src/mcp-servers/</code></td>
+</tr>
+<tr>
+<td>Expense Submission MCP server (<code>submitExpense</code>, <code>getExpenseStatus</code>, <code>listExpenses</code>, <code>updateExpenseStatus</code>)</td>
+<td><code>src/mcp-servers/</code></td>
+</tr>
+<tr>
+<td>Mock data and DB helpers</td>
+<td><code>src/mock-data/</code>, <code>src/db/</code></td>
+</tr>
+</tbody></table>
+<p>Treat all of it as an existing system you are integrating with, not code to change. Open
+Studio&#39;s <strong>MCP Servers</strong> tab and confirm you can see all three and call at least one tool
+from each.</p>
+<h2>6. Start building the workflow</h2>
+<p>Once the pieces above are wired up (tool, MCP client, skill, agent — stages
+<a href="02-build-the-tool.html">02</a>–<a href="04-agent-and-skill.html">04</a> if you want the guided prompts),
+pick a workflow to build. In order of recommendation:</p>
+<ol>
+<li><strong>Expense approval workflow</strong> (start here) — draft the claim, call
+<code>calculateApprovalRoute</code> to work out who signs off, <code>submitExpense</code>, then <strong>suspend</strong>
+the workflow and wait for a human approval before resuming. This is the workflow this
+workshop is built around; the full walkthrough is
+<a href="05-approval-workflow.html">05 Approval workflow</a>.</li>
+<li><strong>Escalation workflow</strong> (stretch) — same shape, but branch on claim amount: above a
+threshold, route through the manager <em>and then</em> finance, as two separate
+suspend/resume steps instead of one.</li>
+<li><strong>Compliance audit workflow</strong> (different shape, no agent involved) — pull
+<code>listExpenses</code>, check each one against <code>searchExpensePolicy</code>, collect anomalies into a
+report, then suspend once for a human to sign off before closing the batch. Good for
+seeing what a workflow looks like <em>without</em> an LLM step in it.</li>
+</ol>
+<p>Whichever you pick, the pattern to hold onto is: a workflow is a <strong>fixed</strong> sequence you
+write down, and the interesting part is almost always the pause-and-resume for a human
+decision — not the happy path.</p>
+<p>Stuck at any step? <a href="troubleshooting.html">Troubleshooting</a> · compare against
+<a href="https://github.com/Stanislav-Carny/mastra-agent-test/blob/main/after/README.md">`after/`</a>.</p>
+
+</body>
+</html>

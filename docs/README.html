@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vibe-coding agents with Cursor and Mastra</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #5c5c5c;
+    --rule: #e0ddd7;
+    --accent: #b45309;
+    --code-bg: #f6f5f2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    max-width: 780px;
+    padding: 48px 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { line-height: 1.25; }
+  h1 { border-bottom: 2px solid var(--rule); padding-bottom: 8px; }
+  h2 { margin-top: 2.2em; border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.92em; }
+  pre { background: var(--code-bg); padding: 14px 16px; border-radius: 6px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--rule); padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); }
+  img { max-width: 100%; border: 1px solid var(--rule); border-radius: 6px; }
+  blockquote { border-left: 3px solid var(--accent); margin: 1em 0; padding: 0.2em 1em; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>Vibe-coding agents with Cursor and Mastra</h1>
+<p>No git, or want the short version? See the <a href="index.html">quickstart</a> instead.</p>
+<p>A 90-minute, hands-on workshop. You will build an expense assistant by describing what
+you want to Cursor, then checking the result in a visual interface called Mastra Studio.</p>
+<p><strong>You do not need to know TypeScript.</strong> You will read code, judge whether it does what
+you asked, and prompt for changes. That is the skill this workshop is about.</p>
+<h2>The five ideas</h2>
+<p>Everything you build is one of five things. Here they are in plain language, using the
+expense assistant as the example.</p>
+<table>
+<thead>
+<tr>
+<th>Idea</th>
+<th>What it really is</th>
+<th>In this project</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Tool</strong></td>
+<td>A function the AI can choose to run. Deterministic: same input, same output.</td>
+<td><code>calculateApprovalRoute</code> works out who must approve a claim</td>
+</tr>
+<tr>
+<td><strong>MCP</strong></td>
+<td>A standard way to offer tools <em>across process boundaries</em>, so tools can live in someone else&#39;s service</td>
+<td>Three separate mock services: employee directory, policy knowledge base, expense submission</td>
+</tr>
+<tr>
+<td><strong>Agent</strong></td>
+<td>An LLM with instructions and tools that <strong>decides</strong> what to do and in what order</td>
+<td>The Expense Assistant picks which lookups to make for each question</td>
+</tr>
+<tr>
+<td><strong>Workflow</strong></td>
+<td>A <strong>fixed</strong> sequence of steps you wrote down, which can pause and resume</td>
+<td>Draft → route → submit → wait for a human approval</td>
+</tr>
+<tr>
+<td><strong>Skill</strong></td>
+<td>A block of instructions the agent loads <em>only when relevant</em>, to keep the system prompt small</td>
+<td>&quot;Always cite the policy document you got this from&quot;</td>
+</tr>
+</tbody></table>
+<p>Two distinctions worth getting right, because both trip people up:</p>
+<p><strong>Tool vs MCP.</strong> A tool is <em>what</em> the capability is. MCP is <em>how</em> it gets delivered. A
+local tool lives in your codebase. An MCP tool lives in another process and arrives over
+a protocol. To the agent, they look identical: both are just callable tools.</p>
+<p><strong>Agent vs Workflow.</strong> An agent decides; a workflow is decided in advance. Use an agent
+when the right sequence depends on the question. Use a workflow when the sequence is
+fixed and you need it auditable, repeatable, and pausable. Real systems use both, and
+this project does too: the workflow calls the agent for the one step that needs judgment.</p>
+<p><strong>Two things named &quot;skill&quot;.</strong> The <code>mastra</code> skill in <code>.agents/skills/</code> teaches <em>Cursor</em>
+how to write current Mastra code. The skill you build in stage 04 teaches <em>your agent</em>
+how to answer policy questions. Same word, different audience.</p>
+<h2>Agenda</h2>
+<table>
+<thead>
+<tr>
+<th>Time</th>
+<th>Stage</th>
+<th>You build</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>—</td>
+<td><a href="00-setup.html">00 Setup</a></td>
+<td>Before you arrive</td>
+</tr>
+<tr>
+<td>0:00</td>
+<td><a href="01-explore-the-kit.html">01 Explore the kit</a></td>
+<td>Nothing: look at what you were given</td>
+</tr>
+<tr>
+<td>0:15</td>
+<td><a href="02-build-the-tool.html">02 Build the tool</a></td>
+<td>A local tool</td>
+</tr>
+<tr>
+<td>0:30</td>
+<td><a href="03-connect-mcp.html">03 Connect MCP</a></td>
+<td>The MCP client</td>
+</tr>
+<tr>
+<td>0:45</td>
+<td><a href="04-agent-and-skill.html">04 Agent and skill</a></td>
+<td>A skill and an agent</td>
+</tr>
+<tr>
+<td>1:10</td>
+<td><a href="05-approval-workflow.html">05 Approval workflow</a></td>
+<td>A workflow with a human pause</td>
+</tr>
+<tr>
+<td>1:25</td>
+<td><a href="06-validate-and-extend.html">06 Validate and extend</a></td>
+<td>Whatever you want</td>
+</tr>
+</tbody></table>
+<p>Facilitators: see the <a href="facilitator-guide.html">facilitator guide</a>.</p>
+<h2>What you are building</h2>
+<p>An assistant that helps employees submit expense claims. It has to answer questions like
+&quot;what is the meal limit in London?&quot; and &quot;who approves a $640 laptop?&quot;, then actually
+submit the claim, then wait for a manager to approve it.</p>
+<p>Three mock services already exist and are running for you, each with its own SQLite
+database. Treat them as systems another team owns:</p>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Tools</th>
+<th>Data</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Employee Directory</td>
+<td><code>getEmployee</code>, <code>listEmployees</code></td>
+<td>100 employees across 8 departments</td>
+</tr>
+<tr>
+<td>Policy Knowledge Base</td>
+<td><code>searchExpensePolicy</code></td>
+<td>11 policy documents, vector-indexed</td>
+</tr>
+<tr>
+<td>Expense Submission</td>
+<td><code>submitExpense</code>, <code>getExpenseStatus</code>, <code>listExpenses</code>, <code>updateExpenseStatus</code></td>
+<td>150 historical claims</td>
+</tr>
+</tbody></table>
+<p>You work in <a href="../before/README.html">`before/`</a>. The finished version is in
+<a href="../after/README.html">`after/`</a> if you get stuck or want to compare.</p>
+<h2>How each stage works</h2>
+<p>Every stage follows the same shape:</p>
+<ol>
+<li><strong>Goal</strong> — one sentence on what you are adding and why</li>
+<li><strong>Prompt</strong> — a prompt to paste into Cursor, written the way you would brief a
+colleague. Change it if you want; that is the point</li>
+<li><strong>What should change</strong> — roughly the files to expect, so you can spot a wrong turn
+early. Cursor names them, so yours will vary a little</li>
+<li><strong>Read the diff</strong> — what to actually look at in the generated code</li>
+<li><strong>Check in Studio</strong> — prove it works in the browser, not just in the editor</li>
+<li><strong>If it went wrong</strong> — the usual failure and how to recover</li>
+</ol>
+<p>Do not skip step 5. The whole reason this workshop uses Mastra is that you can <em>see</em> what
+the agent did: which tools it called, in what order, and what came back.</p>
+<p>If you would rather see than read, the <a href="studio-walkthrough.html">Studio walkthrough</a> is
+every one of those checkpoints as a screenshot, with what to look for in each.</p>
+<h2>Working with Cursor effectively</h2>
+<p>A few things that matter more than prompt wording:</p>
+<ul>
+<li><strong>Describe the outcome, not the implementation.</strong> The prompts in these stages say what
+the business needs and which rules apply. They deliberately do not name files,
+functions, or Mastra APIs — you are not expected to know any of that, and saying it
+wrong is worse than not saying it.</li>
+<li><strong>Keep <code>AGENTS.md</code> in context.</strong> <a href="../before/AGENTS.html">`before/AGENTS.md`</a> tells Cursor
+the project&#39;s rules: where things get registered, which directories are off limits,
+which model to use. It is loaded automatically, and it is why you can leave all of that
+out of your prompt and still get code that fits the project.</li>
+<li><strong>Let it load the <code>mastra</code> skill.</strong> Mastra&#39;s API changes often enough that a model&#39;s
+memory of it is usually wrong. The skill points Cursor at the docs bundled in
+<code>node_modules</code>, which match your installed version exactly.</li>
+<li><strong>Read before you accept.</strong> You are not checking whether the code compiles, you are
+checking whether it does the thing you asked. Those are different.</li>
+<li><strong>Prompt in small steps.</strong> &quot;Build me an expense system&quot; produces something you cannot
+evaluate. One concept at a time produces something you can.</li>
+<li><strong>When it is wrong, say what is wrong, not &quot;fix it&quot;.</strong> &quot;The tool writes to the database
+directly, but it should call the MCP service&quot; gets a good result. &quot;Doesn&#39;t work&quot; does not.</li>
+</ul>
+<h2>Reference</h2>
+<ul>
+<li><a href="studio-walkthrough.html">Studio walkthrough</a> — every checkpoint, in screenshots
+(<a href="mastra-studio-walkthrough.pdf">printable PDF</a>)</li>
+<li><a href="troubleshooting.html">Troubleshooting</a></li>
+<li><a href="facilitator-guide.html">Facilitator guide</a></li>
+<li><a href="https://mastra.ai/llms.txt">Mastra documentation</a></li>
+</ul>
+
+</body>
+</html>

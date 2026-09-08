@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>05 — Approval workflow</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #5c5c5c;
+    --rule: #e0ddd7;
+    --accent: #b45309;
+    --code-bg: #f6f5f2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    max-width: 780px;
+    padding: 48px 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { line-height: 1.25; }
+  h1 { border-bottom: 2px solid var(--rule); padding-bottom: 8px; }
+  h2 { margin-top: 2.2em; border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.92em; }
+  pre { background: var(--code-bg); padding: 14px 16px; border-radius: 6px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--rule); padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); }
+  img { max-width: 100%; border: 1px solid var(--rule); border-radius: 6px; }
+  blockquote { border-left: 3px solid var(--accent); margin: 1em 0; padding: 0.2em 1em; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>05 — Approval workflow</h1>
+<p><strong>Time: 15 minutes. Concept: Workflow.</strong></p>
+<h2>Goal</h2>
+<p>Build a fixed four-step process that submits a claim and then pauses, possibly for days,
+until a human approves it.</p>
+<h2>Why not just use the agent?</h2>
+<p>Your agent can already submit a claim. So why write a workflow?</p>
+<p>Because &quot;submit an expense&quot; is a business process, and business processes have
+requirements an agent cannot meet:</p>
+<ul>
+<li><strong>The order is not negotiable.</strong> Route for approval <em>before</em> submitting, every time.</li>
+<li><strong>It has to survive a restart.</strong> A claim waiting on a manager cannot depend on a chat
+session staying open.</li>
+<li><strong>It has to be auditable.</strong> You need to show which steps ran, with which data.</li>
+</ul>
+<p>A workflow gives you all three. Each step has a typed input and output, the sequence is
+written down, and <code>suspend()</code> saves the whole run to storage so it can resume later.</p>
+<p><strong>The design worth noticing:</strong> step 1 calls the agent, because turning &quot;team dinner with
+4 people in Chicago, $180 total&quot; into structured fields needs judgment. Steps 2 to 4 are
+plain code. Use the model for the part that needs a model, and nothing else.</p>
+<h2>The four steps</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Step</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>draft-claim</code></td>
+<td>Agent turns free text into a structured claim</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>route-for-approval</code></td>
+<td>Calls your approval function directly</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>submit-claim</code></td>
+<td>Creates the claim via the expense MCP service</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>human-approval</code></td>
+<td>Suspends; on resume, records the decision via MCP</td>
+</tr>
+</tbody></table>
+<h2>Prompt</h2>
+<pre><code>Submitting an expense needs to be a fixed process, not something the assistant
+improvises differently each time. Build one called expense-workflow. It starts from an
+employee id and whatever the employee typed — something like &quot;team dinner with 4 people
+in Chicago, $180 total&quot; — and always runs the same four steps, named draft-claim,
+route-for-approval, submit-claim and human-approval:
+
+1. Turn what they typed into a proper claim: amount, currency, category, description,
+   and a note of any policy limits or receipt requirements that apply. This is the one
+   step that genuinely needs judgement, so have the assistant do it.
+
+2. Work out who has to approve it, using the approval calculation directly. Don&#39;t route
+   this through the assistant — it&#39;s arithmetic, and it has to come out the same every
+   time.
+
+3. Create the claim. Anything auto-approved goes in as approved; everything else as
+   pending approval. The expense submission service is the system of record for claims,
+   so it does the writing, not us.
+
+4. Stop and wait for a human. An approver accepts or rejects it and can leave a note,
+   and whatever they decide gets recorded against the claim through that same service.
+
+Step 4 might be waiting for days, so a run in progress has to survive the server being
+restarted.
+</code></pre>
+<p>That prompt insists the expense service does the writing for a reason. Going straight to
+the database is the shortest path from A to B, and it is exactly the shortcut you do not
+want.</p>
+<h2>What should change</h2>
+<ul>
+<li>new: a workflow file under <code>before/src/mastra/workflows/</code></li>
+<li>edited: <code>before/src/mastra/index.ts</code> — a <code>workflows:</code> entry</li>
+</ul>
+<h2>Read the diff</h2>
+<ol>
+<li><strong>No direct database access.</strong> Search the file for <code>drizzle</code>, <code>expenseDb</code>, and
+<code>createClient</code>. All three should be absent: steps 3 and 4 should go through the
+expense service helper you got in stage 03. If they don&#39;t, say: &quot;step 3 writes to the
+database directly, but the expense submission service owns that data — go through the
+service instead.&quot;</li>
+<li><strong>Step 2 does not call the agent.</strong> It should import the plain function. Routing a
+deterministic calculation through an LLM is slower, costs money, and can vary.</li>
+<li><strong>The suspend is conditional.</strong> The pattern is: if there is no <code>resumeData</code>, call
+<code>suspend(...)</code>; otherwise carry on and record the decision. A step that always
+suspends never finishes.</li>
+<li><strong>Each step&#39;s <code>inputSchema</code> matches the previous step&#39;s <code>outputSchema</code>.</strong> This is what
+makes the chain typecheck. If Cursor duplicated field lists, ask it to build each
+schema by extending the previous one.</li>
+</ol>
+<p>Run <code>npm run typecheck</code> before touching Studio. Schema mismatches surface there far more
+clearly than in a stack trace.</p>
+<h2>Check in Studio</h2>
+<p>Restart the dev server, open <strong>Workflows → expense-workflow</strong>, and run it with
+(<a href="studio-walkthrough.md#stage-05--the-workflow-pauses">screenshots</a>):</p>
+<pre><code>employeeId:  emp-002
+requestText: Team dinner with 4 people in Chicago, $180 total
+</code></pre>
+<p>Watch it go through the first three steps and then stop. The run status is <strong>suspended</strong>,
+and <code>human-approval</code> is waiting for input. Notice:</p>
+<ul>
+<li>The drafted claim came out as category <code>meals</code>, with no category list in your prompt.</li>
+<li><code>policyNotes</code> flags the $30/person cap on internal team meals. The agent found that on
+its own. Some runs go further and draft the amount as the reimbursable <code>150</code> rather
+than the <code>180</code> charged; either is fine, and the difference is worth discussing.</li>
+<li><code>approvers</code> comes from your tool, not from the model: <code>[&quot;manager&quot;]</code> for amounts between
+$50 and $500.</li>
+</ul>
+<p>Now the part that makes this a workflow rather than a script: <strong>stop the dev server and
+start it again.</strong> Go back to the run. It is still suspended, exactly where it was. The
+snapshot is in storage.</p>
+<p>Resume it with <code>approved: true</code> and a note. The run completes, and the claim&#39;s status
+changes. Confirm through
+<strong>MCP Servers → expenseTool → <code>getExpenseStatus</code></strong> with the <code>expenseId</code> from the
+result.</p>
+<p>Then try a fresh run and reject it, to see the other branch.</p>
+<h2>If it went wrong</h2>
+<p><strong>The run never suspends.</strong> Step 4 returns instead of calling <code>suspend()</code>, or <code>resumeData</code>
+is being treated as always present. The check is &quot;if I have no <code>resumeData</code>, suspend&quot;.</p>
+<p><strong>It suspends but will not resume.</strong> The step id you resume with must match the step&#39;s
+<code>id</code>. Studio&#39;s resume form handles this for you; hand-written resume calls often don&#39;t.</p>
+<p><strong>Typecheck errors between steps.</strong> Almost always a field that step N returns but step
+N+1&#39;s <code>inputSchema</code> does not declare. Paste the error to Cursor; these are mechanical.</p>
+<p><strong>The claim exists twice.</strong> The workflow submitted it <em>and</em> the agent submitted it during
+drafting. Step 1&#39;s prompt must ask the agent to <em>fill in the claim</em>, not to submit it.</p>
+<h2>Two registries, not one</h2>
+<p>Worth pausing on, because it catches people out. Your workflow is registered in
+<code>src/mastra/index.ts</code>, so Studio lists it under <strong>Workflows</strong> and you can run it there.
+That is not the same as your agent being able to use it. Ask the assistant in chat to run
+the workflow and it cannot: an agent only sees what is in its own <code>tools</code>, <code>skills</code>, and
+<code>workflows</code> config.</p>
+<p>So there are two separate questions, and it is easy to assume the first answers the second:</p>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Answered by</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Can I see and run it in Studio?</td>
+<td>Registered in <code>src/mastra/index.ts</code></td>
+</tr>
+<tr>
+<td>Can the agent use it?</td>
+<td>Listed in that agent&#39;s own config</td>
+</tr>
+</tbody></table>
+<p>Stage 06 has an extension that closes the gap, and it is more interesting than it sounds.</p>
+<h2>Checkpoint</h2>
+<p>You have now built all five concepts and seen the division of labour: the agent decides,
+the workflow enforces, tools compute, MCP connects, and the skill constrains.</p>
+<p>Next: <a href="06-validate-and-extend.html">06 — Validate and extend</a></p>
+
+</body>
+</html>

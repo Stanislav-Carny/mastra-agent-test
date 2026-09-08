@@ -28,6 +28,9 @@ npm run dev      # Mastra Studio at http://localhost:4111
 Full instructions, including what to do when a check fails:
 **[docs/00-setup.md](docs/00-setup.md)**.
 
+No git? Download the zip from the repo's **Code → Download ZIP** button, unzip it, and
+open **[docs/index.html](docs/index.html)** in a browser for the same steps.
+
 ## Start the workshop
 
 **→ [docs/README.md](docs/README.md)**

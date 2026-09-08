@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Troubleshooting</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #5c5c5c;
+    --rule: #e0ddd7;
+    --accent: #b45309;
+    --code-bg: #f6f5f2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    max-width: 780px;
+    padding: 48px 24px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  h1, h2, h3 { line-height: 1.25; }
+  h1 { border-bottom: 2px solid var(--rule); padding-bottom: 8px; }
+  h2 { margin-top: 2.2em; border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.92em; }
+  pre { background: var(--code-bg); padding: 14px 16px; border-radius: 6px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--rule); padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); }
+  img { max-width: 100%; border: 1px solid var(--rule); border-radius: 6px; }
+  blockquote { border-left: 3px solid var(--accent); margin: 1em 0; padding: 0.2em 1em; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>Troubleshooting</h1>
+<p>Start here:</p>
+<pre><code class="language-bash">npm run verify
+</code></pre>
+<p>Every failing check names the thing that is broken. Below are the fixes, grouped by
+symptom.</p>
+<h2>Setup and credentials</h2>
+<p><strong><code>Node 22.13+ FAIL</code></strong></p>
+<p>Install a newer Node. With nvm: <code>nvm install 22 &amp;&amp; nvm use 22</code>, then re-run <code>npm run setup</code>.</p>
+<p><strong><code>ANTHROPIC_API_KEY set FAIL</code> or <code>OPENAI_API_KEY set FAIL</code></strong></p>
+<p>The key is missing from that project&#39;s <code>.env</code>. Note there are two: <code>before/.env</code> and
+<code>after/.env</code>, and they need the same values. <code>npm run setup</code> creates both from
+<code>.env.example</code> but cannot fill them in.</p>
+<p><strong><code>403 Forbidden</code> from Anthropic, or <code>endpoint not allowed</code></strong></p>
+<p>Two likely causes:</p>
+<ol>
+<li><code>ANTHROPIC_BASE_URL</code> does not end in <code>/v1</code>. Gateways almost always need it.
+<code>npm run verify</code> checks this.</li>
+<li>The model is not allow-listed on your gateway. Gateways often permit only specific
+model ids, sometimes only dated ones. Try <code>anthropic/claude-sonnet-4-6</code> or
+<code>anthropic/claude-haiku-4-5-20251001</code>.</li>
+</ol>
+<p><strong><code>Items are not persisted for Zero Data Retention organizations</code></strong></p>
+<p>You switched the agent to an <code>openai/*</code> model. Mastra&#39;s OpenAI path uses the Responses
+API, which stores messages server-side; Zero-Data-Retention accounts disable that, so
+multi-step tool calls break. Switch back to <code>anthropic/claude-sonnet-4-6</code>.</p>
+<p>OpenAI <em>embeddings</em> are unaffected, which is why policy search still works.</p>
+<p><strong><code>Could not find API key process.env.ANTHROPIC_API_KEY</code></strong></p>
+<p>The <code>.env</code> exists but was not loaded. Run commands from inside <code>before/</code> or <code>after/</code>, or
+through the root scripts. MCP servers load <code>.env</code> explicitly via
+<code>src/mcp-servers/_load-env.ts</code>; if you created a new entry point, import that first.</p>
+<h2>Databases</h2>
+<p><strong><code>employees.db seeded FAIL</code> or <code>expenses.db seeded FAIL</code></strong></p>
+<pre><code class="language-bash">npm run db:setup
+</code></pre>
+<p><strong><code>policy index built FAIL</code></strong></p>
+<p>Needs <code>OPENAI_API_KEY</code>, because it embeds the policy documents. Set it, then:</p>
+<pre><code class="language-bash">npm run db:reset &amp;&amp; npm run db:setup
+</code></pre>
+<p><strong>Data is in a confusing state after experimenting</strong></p>
+<pre><code class="language-bash">npm run db:reset       # before/
+npm run db:reset:after # after/
+</code></pre>
+<p>That deletes the mock databases and rebuilds them from the fixtures in <code>src/mock-data/</code>.
+Nothing is lost that is not regenerated: the <code>.db</code> files are gitignored on purpose.</p>
+<h2>MCP</h2>
+<p><strong><code>MCP services respond FAIL</code>, or &quot;Connection closed&quot; on startup</strong></p>
+<p>Usually a path problem. Server script paths must be absolute and built from the
+<code>projectRoot</code> export in <code>src/db/paths.ts</code>. Anything relative, or anything based on
+<code>process.cwd()</code>, breaks because MCP subprocesses run from a different directory.</p>
+<p>Test a server on its own:</p>
+<pre><code class="language-bash">cd before
+npx tsx src/mcp-servers/employee-server.ts
+</code></pre>
+<p>It should start and wait. <code>Ctrl-C</code> to stop. If it errors, the problem is the server or
+the database, not your client.</p>
+<p><strong>The policy server times out on first connection</strong></p>
+<p>It builds the vector index on first start, which takes several seconds. Build it up front
+with <code>npm run db:setup</code>, and keep the client timeout at 120 seconds.</p>
+<p><strong><code>MCPClient with identical configuration already exists</code></strong></p>
+<p>You are constructing the client more than once. It must be a single module-level
+<code>export const</code>, not created inside a function or per request.</p>
+<p><strong><code>Invalid tools/call result: expected record, received array</code></strong></p>
+<p>An MCP tool returned a bare array. MCP requires structured results to be an object. Wrap
+it: <code>return { expenses: rows }</code> instead of <code>return rows</code>.</p>
+<p><strong>Scary &quot;Connection closed&quot; errors when a script finishes</strong></p>
+<p>Expected. Shutting down stdio subprocesses always logs that, even on success. <code>npm run verify</code> isolates the check in a child process specifically so this noise stays out of the
+report.</p>
+<h2>Studio</h2>
+<p><strong>My agent, tool, or workflow is not in Studio</strong></p>
+<p>It is not registered. Open <code>src/mastra/index.ts</code> and confirm it is in <code>agents:</code>, <code>tools:</code>,
+<code>workflows:</code>, or <code>mcpServers:</code>. This is by far the most common problem in the workshop.</p>
+<p><strong>I registered it and it still is not there</strong></p>
+<p>Restart the dev server. Adding a new top-level key does not always hot-reload.</p>
+<p><strong>Studio is not on the port I expected</strong></p>
+<p>If 4111 is taken, <code>mastra dev</code> quietly falls back to the next free port and prints the real
+one in its startup banner:</p>
+<pre><code>│ Studio: http://localhost:4112
+</code></pre>
+<p>Read the banner rather than assuming 4111. This is what happens when you run <code>before/</code> and
+<code>after/</code> at the same time, which is fine to do.</p>
+<p><strong><code>Another development server instance is already running in this directory</code></strong></p>
+<p>Two dev servers for the <em>same</em> project. Mastra refuses, and names the process to stop:</p>
+<pre><code>│ PID 54707 is still active.
+</code></pre>
+<p><code>kill &lt;pid&gt;</code>, then start it again. Note that stopping <code>npm run dev</code> with <code>Ctrl+C</code> sometimes
+leaves that process behind holding the port, which is the usual cause.</p>
+<p><strong>Studio loads but every agent message errors</strong></p>
+<p>Credentials. Check the terminal running <code>npm run dev</code> for the real error, then work
+through the credentials section above.</p>
+<h2>Agent behaviour</h2>
+<p><strong>No citations in policy answers</strong></p>
+<p>The skill is not loading. Either it is missing from the agent&#39;s <code>skills</code> array, or its
+description does not sound relevant to the question. Descriptions should read as trigger
+conditions and mention policy, limits, and approval rules explicitly.</p>
+<p><strong>The agent does approval arithmetic itself instead of calling the tool</strong></p>
+<p>Make the instruction a prohibition rather than a suggestion: &quot;Never do approval-threshold
+arithmetic in your head; always call calculateApprovalRoute.&quot;</p>
+<p><strong>The agent invents an employee id</strong></p>
+<p>Add: &quot;Ask for the employee id if you were not given one, rather than guessing.&quot;</p>
+<p><strong>The agent ignores a tool completely</strong></p>
+<p>Check the tool&#39;s <code>description</code>. That, plus the field <code>.describe()</code> text, is all the model
+has to go on when deciding what to call.</p>
+<h2>Workflow</h2>
+<p><strong>The run never suspends</strong></p>
+<p>The step returns instead of calling <code>suspend()</code>. The pattern is: no <code>resumeData</code> means
+suspend; otherwise continue.</p>
+<p><strong>The run suspends and never resumes</strong></p>
+<p>The step id passed to <code>resume()</code> must match the step&#39;s <code>id</code>. Studio&#39;s resume form handles
+this; hand-written calls often get it wrong.</p>
+<p><strong>Typecheck errors between steps</strong></p>
+<p>A field one step returns is not declared in the next step&#39;s <code>inputSchema</code>. Build each
+schema by extending the previous one rather than retyping the fields.</p>
+<p><strong>The claim gets created twice</strong></p>
+<p>Both the drafting step&#39;s agent call and the submit step created one. The drafting prompt
+must ask the agent to fill in the claim, not to submit it.</p>
+<h2>Nuclear option</h2>
+<pre><code class="language-bash">cd &lt;repo root&gt;
+rm -rf before/node_modules after/node_modules
+npm run setup
+npm run verify
+</code></pre>
+<p>Your <code>.env</code> files are preserved. If that still fails, compare against
+<a href="../after/README.html">`after/`</a>, which is known to work.</p>
+
+</body>
+</html>

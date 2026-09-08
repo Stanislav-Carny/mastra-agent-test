@@ -19,6 +19,7 @@
     "build": "npm run build --prefix before && npm run build --prefix after",
     "docs:screenshots": "node scripts/capture-studio-screenshots.mjs",
     "docs:pdf": "node scripts/build-walkthrough-pdf.mjs",
+    "docs:html": "node scripts/build-docs-html.mjs",
     "docs:receipt": "node scripts/build-sample-receipt.mjs",
     "e2e": "node scripts/e2e-receipt-flow.mjs"
   },
