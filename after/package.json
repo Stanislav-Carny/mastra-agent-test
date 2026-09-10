@@ -1,7 +1,7 @@
 {
-  "name": "expense-assistant-after",
+  "name": "expense-assistant-before",
   "version": "1.0.0",
-  "description": "Completed workshop solution: an expense assistant built from a local tool, three MCP services, an agent skill, and a human-approval workflow.",
+  "description": "Workshop starting point: seeded mock SQLite databases and three MCP services, waiting for a tool, skill, agent, and workflow.",
   "private": true,
   "type": "module",
   "engines": {

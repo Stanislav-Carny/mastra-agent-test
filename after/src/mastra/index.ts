@@ -9,23 +9,23 @@ import {
   Observability,
   SensitiveDataFilter,
 } from '@mastra/observability';
-import { claimReviewAgent } from './agents/claim-review-agent';
-import { expenseAgent } from './agents/expense-agent';
-import { expenseServerProxies } from './mcp/expense-service';
-import { approvalRouteTool } from './tools/approval-route-tool';
-import { expenseWorkflow } from './workflows/expense-workflow';
+import { setupCheckAgent } from './agents/setup-check-agent';
 
 /**
- * Everything the workshop builds is registered here. Anything missing from this file
- * does not appear in Mastra Studio, which is the most common reason a newly created
- * agent, tool, or workflow seems to have vanished.
+ * This file is the registry for the whole project. If something you build is not listed
+ * here, it will not show up in Mastra Studio, no matter how correct the code is.
+ *
+ * You will add four things to this file during the workshop:
+ *
+ *   tools:      { approvalRouteTool }        <- docs/02-build-the-tool.md
+ *   mcpServers: { ...expenseServerProxies }  <- docs/03-connect-mcp.md
+ *   agents:     { expenseAgent }             <- docs/04-agent-and-skill.md
+ *   workflows:  { expenseWorkflow }          <- docs/05-approval-workflow.md
+ *
+ * The storage, logger, and observability config below is already done. Leave it alone.
  */
 export const mastra = new Mastra({
-  agents: { expenseAgent, claimReviewAgent },
-  tools: { approvalRouteTool },
-  workflows: { expenseWorkflow },
-  // Surfaces the three mock services in Studio's MCP Servers tab.
-  mcpServers: { ...expenseServerProxies },
+  agents: { setupCheckAgent },
   bundler: {
     externals: ['@duckdb/node-bindings'],
   },
