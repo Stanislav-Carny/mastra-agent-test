@@ -27,13 +27,22 @@ Then in Studio, one pass over everything:
 
 If all five hold, you have built the whole thing.
 
+For a harder pass, work through [`test-cases/`](../test-cases/README.md): nine scenarios
+with ready-made receipts, covering a claim over its cap, one that is never reimbursable,
+one submitted months late, one in euros, and a duplicate. Each folder says what a good run
+looks like, so you can tell whether your build reaches the same conclusions as the
+reference.
+
 ## Compare with the reference
 
 ```bash
 diff -ru before/src/mastra after/src/mastra
 ```
 
-Differences are expected and usually fine. Worth a closer look at:
+Two differences are deliberate rather than yours to fix: `after/` has a second agent and a
+fifth workflow step, both from the reviewer extension described below.
+
+Other differences are expected and usually fine. Worth a closer look at:
 
 - **Where the write path goes.** The reference funnels every expense write through the
   expense submission service. If yours writes to `expenses.db` from a step, that is the
@@ -129,6 +138,88 @@ aggregate like this returns something worth looking at. Notice you do **not** ha
 change the agent: it picks up the new tool from `tools/list` on the next start. That is
 the MCP payoff. Remember to return an object, not a bare array.
 
+**Add a second agent — after arguing yourself out of five (20 min).** This is the
+extension most likely to teach you something you did not expect, because most of it is
+deciding *not* to add agents.
+
+Once people see one agent working, the instinct is to add more. Resist it long enough to
+apply four questions to each candidate:
+
+1. Would one prompt have to serve two conflicting goals?
+2. Must one side be denied tools the other has?
+3. Does the judgment need to be independent of whoever produced the work?
+4. **Would a tool or a skill do this instead?**
+
+Question 4 is the one that does the work. Here is the whole shortlist for this project:
+
+| Candidate | Verdict | Why |
+| --------- | ------- | --- |
+| A policy expert agent | No | It already exists, as a tool plus a skill |
+| A receipt-parsing agent | No | The chat model does this natively, as you saw above |
+| A router agent to classify requests | No | Tool selection *is* the routing |
+| A duplicate-claim detector | Not as an agent | It is a database query — make it a tool |
+| An agent that approves claims | No | It deletes the only human step in the process |
+| A claim reviewer acting for finance | **Yes** | Conflicting goal, real privilege boundary, needs independence |
+
+Only the last one passes. Note that the duplicate detector does not disappear — it comes
+back as a *tool the reviewer can call*, which is usually where these candidates belong.
+
+The reviewer passes because finance review is genuinely a different job from claim
+submission. The assistant works for the claimant and wants a well-formed claim submitted;
+a reviewer asks whether the company should pay. One prompt cannot do both honestly, the
+reviewer must not be able to approve anything itself, and it should not be marking its own
+homework.
+
+```
+Submitting a claim ends with a human approving it, but that person currently sees only
+the claim itself. Before it reaches them I want a second opinion from someone acting for
+finance rather than for the employee: does this comply with policy, has this person
+claimed something like it before, and should we pay it?
+
+Whoever does that review must not be able to submit claims or change their status. They
+advise, they don't act. And they should check the policy themselves rather than trusting
+the note the submitter attached.
+
+Add that review to the submission process, just before it stops for the human, and pass
+the recommendation and the reasoning through so the approver reads it next to the claim.
+```
+
+**What should change:** a second agent with a deliberately shorter tool list, a new step
+in the workflow between submitting and the human, and a recommendation carried into what
+the approver sees.
+
+**Then check the boundary is real, not just described.** Open the new agent in Studio and
+count its tools: five, not seven. `submitExpense` and `updateExpenseStatus` are absent, so
+it cannot act on its own recommendation even if it wants to. An instruction saying "do not
+submit claims" is a preference; an absent tool is a guarantee. That difference is most of
+the argument for a separate agent rather than a longer prompt.
+
+**What it actually does.** Run the workflow and read the recommendation. In the reference,
+the three cases behave differently: a well-documented $96 client dinner gets `approve`, a
+thinly-described lunch gets `needs_more_information` with a list of what is missing, and
+the $180 team dinner gets `reject` — the drafting agent flagged the same $30/person cap and
+submitted anyway, while the reviewer weighs it and says no. Watching the two disagree about
+one claim is the clearest demonstration that independence is doing something.
+
+Two things worth trying deliberately:
+
+- **Submit the same claim twice, then run it a third time.** The reviewer calls
+  `listExpenses`, sees the earlier pending copies and flags the duplicate. The drafting
+  agent never notices, because it never looks at history. New capability, not a costume.
+- **Submit something under $50.** The reviewer will probably point out that the claim is
+  already marked `approved` while still sitting in front of an approver. That is a real
+  inconsistency in this workflow, and nobody told the reviewer to look for it — it is what
+  the *Branch the workflow* extension below asks you to fix.
+
+**The wiring to avoid.** Mastra supports supervisor agents, where a parent delegates to
+subagents listed on its `agents` property, and it is tempting to hang the reviewer off the
+assistant that way. Don't. Letting the claimant's own assistant choose when to invite
+scrutiny of the claimant's expenses puts back the conflict of interest the split exists to
+remove. Keep control in the workflow, which calls each agent at a fixed point. Mastra's
+[multi-agent patterns](https://mastra.ai/docs/guides/multi-agent-systems) covers the
+tradeoffs; its own advice is to start with one agent and add more only when the structure
+clearly earns it.
+
 **Branch the workflow (20 min).** Skip the `human-approval` step entirely when
 `autoApproved` is true, so small claims complete without a pause. Ask Cursor about
 Mastra's conditional branching.
@@ -147,6 +238,10 @@ conversation, instead of asking for it each time.
   another team or service? MCP.
 - **Instructions or skill?** Does the rule apply always? Instructions. Only sometimes?
   Skill.
+- **One agent or two?** Two only when the goals conflict, when one side must be denied
+  tools the other has, or when the judgment has to be independent of whoever did the work.
+  Otherwise you want a tool, a skill, or a better prompt. "Specialist per capability" is
+  how you end up with five agents doing one agent's job.
 - **The registry is real.** Most "my agent disappeared" moments are a missing entry in
   `src/mastra/index.ts`.
 

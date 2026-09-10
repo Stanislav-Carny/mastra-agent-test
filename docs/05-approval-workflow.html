@@ -87,6 +87,10 @@ plain code. Use the model for the part that needs a model, and nothing else.</p>
 <td>Suspends; on resume, records the decision via MCP</td>
 </tr>
 </tbody></table>
+<p>Build these four. If you look at <code>after/</code> you will find a fifth, <code>review-claim</code>, sitting
+between submit and approval — that comes from a <a href="06-validate-and-extend.html#extensions">stage 06
+extension</a> and is not part of this stage, so expect
+it to show up when you diff the two projects later.</p>
 <h2 id="prompt">Prompt</h2>
 <pre><code>Submitting an expense needs to be a fixed process, not something the assistant
 improvises differently each time. Build one called expense-workflow. It starts from an

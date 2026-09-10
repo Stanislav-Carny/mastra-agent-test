@@ -88,6 +88,10 @@ a protocol. To the agent, they look identical: both are just callable tools.</p>
 when the right sequence depends on the question. Use a workflow when the sequence is
 fixed and you need it auditable, repeatable, and pausable. Real systems use both, and
 this project does too: the workflow calls the agent for the one step that needs judgment.</p>
+<p>If someone asks whether they need a <em>second</em> agent — and someone always does —
+<a href="06-validate-and-extend.html#extensions">stage 06</a> works through six candidates and accepts
+one. More agents is not the goal; the test is whether the extra one can do something the
+first cannot.</p>
 <p><strong>Two things named &quot;skill&quot;.</strong> The <code>mastra</code> skill in <code>.agents/skills/</code> teaches <em>Cursor</em>
 how to write current Mastra code. The skill you build in stage 04 teaches <em>your agent</em>
 how to answer policy questions. Same word, different audience.</p>

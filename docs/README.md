@@ -32,6 +32,11 @@ when the right sequence depends on the question. Use a workflow when the sequenc
 fixed and you need it auditable, repeatable, and pausable. Real systems use both, and
 this project does too: the workflow calls the agent for the one step that needs judgment.
 
+If someone asks whether they need a *second* agent — and someone always does —
+[stage 06](06-validate-and-extend.md#extensions) works through six candidates and accepts
+one. More agents is not the goal; the test is whether the extra one can do something the
+first cannot.
+
 **Two things named "skill".** The `mastra` skill in `.agents/skills/` teaches *Cursor*
 how to write current Mastra code. The skill you build in stage 04 teaches *your agent*
 how to answer policy questions. Same word, different audience.

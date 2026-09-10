@@ -58,15 +58,22 @@ npm run e2e            # in another, takes about a minute
 ```
 
 It attaches the sample receipt in chat, waits for the agent to read it and start the
-workflow, then approves the claim and confirms the run completes. Every step is
-screenshotted into `reports/<timestamp>/`, which is gitignored, with a `report.md`
-summarising what passed. A failed step leaves you a picture of the screen at the moment it
+workflow, checks that the reviewer's recommendation reached the approver, then approves the
+claim and confirms the run completes. Every step is screenshotted into
+`reports/<timestamp>/`, which is gitignored, with a `report.md` summarising what passed. A failed step leaves you a picture of the screen at the moment it
 broke, which is usually enough to see what changed.
 
 Two caveats. The run submits a claim for `emp-002`, so follow it with `npm run db:reset:after`
 to restore the seeded fixture. And the agent's choices come from a model, so an occasional
 step can fail on one run and pass on the next — read a failure as "look at this", not
 "the workshop is broken".
+
+**Rehearsing the interesting failures.** [`test-cases/`](../test-cases/README.md) has nine
+hand-run scenarios with receipts already made: over the cap, never reimbursable, months
+late, in euros, duplicated, and two that should not reach the workflow at all. Work through
+them once before facilitating and you will have seen most of what the room can hit, and
+you will have three or four demos better than the happy path. Reset the database between
+full passes or the reviewer will flag your second pass as duplicates — correctly.
 
 ## Run of show
 
@@ -99,6 +106,15 @@ Then run the workflow, let it suspend, and say: "Same capabilities, fixed order,
 stops for a human. That is a **workflow**."
 
 Two minutes of demo lands better than ten minutes of slides.
+
+**On the second agent, when someone spots it.** `after/` has a Claim Reviewer, and running
+the $180 team dinner shows the two agents disagreeing: the assistant submits the over-cap
+claim, the reviewer recommends rejecting it. It is a good moment, but do not let it become
+"and you should add more agents." The [stage 06
+extension](06-validate-and-extend.md#extensions) rejects five candidates before accepting
+this one, and the reason it survives is that it is denied the write tools. If time is
+short, the one-liner is: "a second agent has to be able to do something the first cannot —
+here, that is being unable to approve its own claim."
 
 ### 0:10 Stage 01 (10 min)
 

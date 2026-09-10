@@ -54,6 +54,9 @@ they show the real starting point. Everything from stage 02 onwards comes from t
 finished <code>after/</code> project, because that is the only place all the pieces exist at once —
 so its sidebar is fuller than yours will be at that moment. Judge the panel you are
 working in, not the item count next to it.</p>
+<p>That applies to the workflow too. <code>after/</code> includes the stage 06 reviewer, so its graph
+has five steps where the one you build in stage 05 has four, and its Agents list has two
+where yours has one. Both extras are marked where they appear.</p>
 <hr>
 <h2 id="getting-it-running">Getting it running</h2>
 <p>Assuming <a href="00-setup.html">setup</a> is done and your API keys are in place, three commands get
@@ -164,11 +167,16 @@ arithmetic and prose knowledge, arriving through different doors, merged into on
 <p><strong>Do this:</strong> build the workflow, restart, open <strong>Workflows → expense-workflow</strong>, and run it
 with <code>emp-002</code> and <code>Team dinner with 4 people in Chicago, $180 total</code>.</p>
 <p><img src="images/05-workflow-suspended.png" alt="A suspended workflow run waiting at the human-approval step"></p>
-<p><strong>Look for:</strong> the run marked <strong>Suspended</strong>, the first three steps green, and
+<p><strong>Look for:</strong> the run marked <strong>Suspended</strong>, the steps before it green, and
 <code>human-approval</code> highlighted with a <strong>Step suspended / Needs input</strong> panel on the right.
-The timeline at the bottom shows where the time went: <code>draft-claim</code> takes seconds because
-it calls the agent, while <code>route-for-approval</code> and <code>submit-claim</code> are near-instant because
-they are ordinary code.</p>
+The timeline at the bottom is worth reading closely, because it prices the design. The two
+steps that call an agent take seconds each, and <code>route-for-approval</code> and <code>submit-claim</code> are
+near-instant because they are ordinary code. That gap is the argument for using the model
+only where judgment is actually needed.</p>
+<p>The graph here has five steps because it comes from <code>after/</code>. <code>review-claim</code> is the
+<a href="06-validate-and-extend.html#extensions">stage 06 extension</a>, and the roughly 20 seconds it
+adds is the honest cost of a second opinion. The four-step version you built in stage 05
+behaves identically without it.</p>
 <p>Check the drafted claim before you resume. The agent will usually have flagged the
 $30/person cap on internal team meals, and some runs draft the amount as the $150 that is
 actually reimbursable rather than the $180 charged. Nobody told it to do that.</p>
@@ -176,8 +184,8 @@ actually reimbursable rather than the $180 charged. Nobody told it to do that.</
 from <strong>Recent runs</strong>. It is still suspended, exactly where it was. The snapshot lives in
 storage, not in your browser or in a chat session, which is the reason workflows exist.</p>
 <p><strong>Then resume it.</strong> Tick the approve box, add a note, and press Resume:</p>
-<p><img src="images/05-workflow-resumed.png" alt="A completed workflow run with all four steps successful"></p>
-<p><strong>Look for:</strong> status <strong>Success</strong> and all four steps green through to <code>End</code>. Confirm the
+<p><img src="images/05-workflow-resumed.png" alt="A completed workflow run with every step successful"></p>
+<p><strong>Look for:</strong> status <strong>Success</strong> and every step green through to <code>End</code>. Confirm the
 decision was actually recorded by calling <strong>MCP Servers → expenseTool → getExpenseStatus</strong>
 with the <code>expenseId</code> from the result: the status should now be <code>approved</code>.</p>
 <p>That last check is the one worth doing properly. The workflow did not write to
@@ -211,7 +219,7 @@ to make. The reference agent is told to submit it and record the breach, because
 approver decides. Yours will probably stop and ask until you tell it otherwise.</li>
 </ul>
 <p>Then it calls the workflow, and Studio draws the run inline in the conversation. Scroll
-down and you can watch the same four steps you ran from a form in stage 05:</p>
+down and you can watch the same steps you ran from a form in stage 05:</p>
 <p><img src="images/06-chat-workflow-suspended.png" alt="The expense workflow drawn inside the chat, paused at the human-approval step"></p>
 <p><strong>Look for:</strong> the graph rendered inside the message, and <code>human-approval</code> marked as
 waiting with the run stopped there. The chat is now suspended too — the pause travelled

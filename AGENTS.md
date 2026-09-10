@@ -8,11 +8,13 @@ projects plus the curriculum:
 | `before/` | Participant starting point: mock services and data, no agent yet |
 | `after/` | The completed reference solution |
 | `docs/` | Participant stages, troubleshooting, and the facilitator guide |
+| `test-cases/` | Nine manual scenarios with generated receipts, for checking a build by hand |
 | `scripts/setup.mjs` | Clone-to-ready setup for both projects |
 | `scripts/capture-studio-screenshots.mjs` | Regenerates `docs/images/` with Playwright |
 | `scripts/build-walkthrough-pdf.mjs` | Renders the walkthrough into the printable handout |
 | `scripts/build-sample-receipt.mjs` | Regenerates the receipt image used by the stage 06 extension |
 | `scripts/e2e-receipt-flow.mjs` | Drives the receipt-to-approval flow in Studio, into gitignored `reports/` |
+| `scripts/build-test-case-receipts.mjs` | Regenerates the receipt in every `test-cases/` folder |
 
 ## CRITICAL: Load the `mastra` skill first
 
@@ -39,7 +41,13 @@ APIs change between versions.
 
 The docs quote real behaviour: tool names, thresholds, expected Studio output, and error
 messages. If you change the code, re-check the affected stage in `docs/` and the tables in
-the READMEs. If the change is visible in Studio, regenerate the screenshots with
+the READMEs.
+
+The same applies more sharply to `test-cases/`. Every receipt is built to sit on one side
+of a specific policy rule, and each README states what a run actually did, not what it
+ought to do. If you change a threshold in `expense-policy-docs.ts` or
+`approval-route-tool.ts`, re-run the affected case against a freshly reset database and
+correct its README. If the change is visible in Studio, regenerate the screenshots with
 `npm run docs:screenshots` rather than editing `docs/images/` by hand.
 
 ## Resources

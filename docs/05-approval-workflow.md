@@ -35,6 +35,11 @@ plain code. Use the model for the part that needs a model, and nothing else.
 | 3 | `submit-claim` | Creates the claim via the expense MCP service |
 | 4 | `human-approval` | Suspends; on resume, records the decision via MCP |
 
+Build these four. If you look at `after/` you will find a fifth, `review-claim`, sitting
+between submit and approval — that comes from a [stage 06
+extension](06-validate-and-extend.md#extensions) and is not part of this stage, so expect
+it to show up when you diff the two projects later.
+
 ## Prompt
 
 ```
